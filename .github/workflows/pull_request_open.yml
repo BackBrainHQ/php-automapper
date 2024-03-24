@@ -3,7 +3,7 @@ name: '[Pull-Request] Open'
 on:
   pull_request:
     branches:
-      - next
+      - main
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref_name }}'
