@@ -27,6 +27,108 @@ PHP AutoMapper strives to implement the core functionalities of the original .NE
 
 Please note that due to differences between C# and PHP, not all features from the original AutoMapper library are applicable or have been implemented at this stage.
 
+## Usage Example 
+
+Here's a simple example of how to use PHP AutoMapper to map data between two objects.
+For more examples and detailed usage instructions, please refer to the [examples](docs/examples) directory.
+
+
+```php
+<?php
+// php docs/example/01_basic.php
+use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\MapperConfiguration;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+class AccountDTO {
+    public string $givenName;
+
+    public string $familyName;
+
+    public int $age;
+
+    public float $height;
+}
+
+class ProfileDTO {
+    private string $givenName;
+
+    private string $familyName;
+
+    private string $fullName;
+
+    private int $age;
+
+    private float $height;
+
+    public function setGivenName(string $givenName): ProfileDTO
+    {
+        $this->givenName = $givenName;
+        return $this;
+    }
+
+    public function setFamilyName(string $familyName): ProfileDTO
+    {
+        $this->familyName = $familyName;
+        return $this;
+    }
+
+    public function setFullName(string $fullName): ProfileDTO
+    {
+        $this->fullName = $fullName;
+        return $this;
+    }
+
+    public function setAge(int $age): ProfileDTO
+    {
+        $this->age = $age;
+        return $this;
+    }
+
+    public function setHeight(float $height): ProfileDTO
+    {
+        $this->height = $height;
+        return $this;
+    }
+}
+
+
+$config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+    ->createMap(AccountDTO::class, ProfileDTO::class)
+    ->forMember(
+        'fullName',
+        fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(
+            fn (AccountDTO $source) => sprintf('%s %s (%d)', $source->givenName, $source->familyName, $source->age)
+        )
+    )
+);
+
+$account = new AccountDTO();
+$account->givenName = 'John';
+$account->familyName = 'Doe';
+$account->age = 30;
+$account->height = 1.75;
+
+$autoMapper = $config->createMapper();
+$profile = $autoMapper->map($account, ProfileDTO::class);
+
+dump($profile);
+```
+The dump shows the new ProfileDTO with the mapped properties:
+```
+^ ProfileDTO^ {#45
+  -givenName: "John"
+  -familyName: "Doe"
+  -fullName: "John Doe (30)"
+  -age: 30
+  -height: 1.75
+}
+```
+
+For more examples and detailed usage instructions, please refer to the [examples](docs/examples) directory.
+
 ## Documentation
 
 For general usage patterns and understanding AutoMapper concepts, please refer to the original AutoMapper documentation:
