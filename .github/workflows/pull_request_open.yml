@@ -1,0 +1,81 @@
+name: '[Pull-Request] Open'
+
+on:
+  pull_request:
+    branches:
+      - next
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref_name }}'
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          ini-values: "post_max_size=256M"
+      - name: Install Dependencies
+        run: make vendors
+        env:
+          COMPOSER_IGNORE_PLATFORM_REQS: 1
+      - name: Lint
+        run: php vendor/bin/php-cs-fixer fix --dry-run --diff
+        env:
+          PHP_CS_FIXER_IGNORE_ENV: 1
+
+  phpstan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          ini-values: "post_max_size=256M"
+      - name: Install Dependencies
+        run: make vendors
+        env:
+          COMPOSER_IGNORE_PLATFORM_REQS: 1
+      - name: Analyse
+        run: php vendor/bin/phpstan --memory-limit=512M analyse
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        setup:
+          - php: '8.2'
+            vendors: 'high-deps'
+          - php: '8.2'
+            vendors: 'low-deps'
+          - php: '8.3'
+            vendors: 'high-deps'
+          - php: '8.3'
+            vendors: 'low-deps'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.setup.php }}
+      - name: Install Dependencies
+        run: make ${{ matrix.setup.vendors }}
+        env:
+          COMPOSER_IGNORE_PLATFORM_REQS: 1
+      - name: Test
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit -d memory_limit=256M --coverage-text
+
+

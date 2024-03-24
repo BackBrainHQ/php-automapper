@@ -9,9 +9,13 @@ _info:
 vendors: _info
 	composer install
 
-.PHONY: vendors-update
-vendors-update: _info
+.PHONY: high-deps
+high-deps: _info
 	composer update
+
+.PHONY: low-deps
+low-deps: _info
+	composer update --prefer-lowest
 
 # Run linters
 .PHONY: lint
@@ -33,11 +37,9 @@ _test-stan:
 	vendor/bin/phpstan --memory-limit=512M analyse
 
 .PHONY: _test-unit-high-deps
-_test-unit-high-deps:
-	composer update
+_test-unit-high-deps: high-deps
 	XDEBUG_MODE=coverage vendor/bin/phpunit -d memory_limit=256M --coverage-cobertura=./cobertura.xml --coverage-text
 
 .PHONY: _test-unit-low-deps
-_test-unit-low-deps:
-	composer update --prefer-lowest
+_test-unit-low-deps: low-deps
 	XDEBUG_MODE=coverage vendor/bin/phpunit -d memory_limit=256M --coverage-cobertura=./cobertura.xml --coverage-text
