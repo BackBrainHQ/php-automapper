@@ -1,23 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Backbrain\Automapper;
 
-use Backbrain\Automapper\Builder\ProfileBuilder;
+use Backbrain\Automapper\Builder\DefaultConfig;
 use Backbrain\Automapper\Contract\AutoMapperInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\MapperConfigurationInterface;
 
 class MapperConfiguration implements MapperConfigurationInterface
 {
-    private ProfileBuilder $builder;
+    private DefaultConfig $builder;
 
     /**
-     * @param callable(ProfileBuilderInterface $cnf):void|null $configFn
+     * @param callable(Config $cnf):void|null $configFn
      */
     public function __construct(?callable $configFn = null)
     {
-        $this->builder = new ProfileBuilder();
+        $this->builder = new DefaultConfig();
         if (null === $configFn) {
             return;
         }

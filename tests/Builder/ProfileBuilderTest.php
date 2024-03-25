@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Tests\Builder;
 
-use Backbrain\Automapper\Builder\ProfileBuilder;
+use Backbrain\Automapper\Builder\DefaultConfig;
 use Backbrain\Automapper\Context\ResolutionContext;
 use Backbrain\Automapper\Profile;
 use PHPUnit\Framework\TestCase;
@@ -13,7 +13,7 @@ class ProfileBuilderTest extends TestCase
 {
     public function testProfileBuilderShouldCreateMap()
     {
-        $profileBuilder = new ProfileBuilder();
+        $profileBuilder = new DefaultConfig();
 
         $mapBuilder = $profileBuilder->createMap('SourceClass', 'DestinationClass');
 
@@ -22,7 +22,7 @@ class ProfileBuilderTest extends TestCase
 
     public function testProfileBuilderShouldAddProfile()
     {
-        $profileBuilder = new ProfileBuilder();
+        $profileBuilder = new DefaultConfig();
         $this->assertCount(0, $profileBuilder->getMaps());
 
         $profileBuilder->addProfile(new class() extends Profile {
@@ -37,7 +37,7 @@ class ProfileBuilderTest extends TestCase
 
     public function testProfileBuilderShouldDeduplicateMaps()
     {
-        $profileBuilder = new ProfileBuilder();
+        $profileBuilder = new DefaultConfig();
 
         $profileBuilder->createMap('SourceClass', 'DestinationClass');
         $profileBuilder->createMap('SourceClass', 'DestinationClass');
@@ -47,7 +47,7 @@ class ProfileBuilderTest extends TestCase
 
     public function testProfileBuilderShouldDeduplicateMapsAndLastOneWins()
     {
-        $profileBuilder = new ProfileBuilder();
+        $profileBuilder = new DefaultConfig();
 
         $profileBuilder->createMap('SourceClass', 'DestinationClass')->convertUsing(function ($source) {
             return $source.'_first';

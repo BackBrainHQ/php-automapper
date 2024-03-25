@@ -20,7 +20,7 @@ class MapTest extends TestCase
         $sourceMap->method('getSourceType')->willReturn('sourceType');
         $sourceMap->method('getDestinationType')->willReturn('destinationType');
         $sourceMap->method('getMembers')->willReturn(['members']);
-        $sourceMap->method('getMappedBy')->willReturn('mappedBy');
+        $sourceMap->method('getAs')->willReturn('mappedBy');
         $sourceMap->method('getTypeConverter')->willReturn($this->createMock(TypeConverterInterface::class));
         $sourceMap->method('getTypeFactory')->willReturn($this->createMock(TypeFactoryInterface::class));
         $sourceMap->method('getSourceMemberNamingConvention')->willReturn($this->createMock(NamingConventionInterface::class));
@@ -32,7 +32,7 @@ class MapTest extends TestCase
         $this->assertEquals('sourceType', $newMap->getSourceType());
         $this->assertEquals('destinationType', $newMap->getDestinationType());
         $this->assertEquals(['members'], $newMap->getMembers());
-        $this->assertEquals('mappedBy', $newMap->getMappedBy());
+        $this->assertEquals('mappedBy', $newMap->getAs());
         $this->assertInstanceOf(TypeConverterInterface::class, $newMap->getTypeConverter());
         $this->assertInstanceOf(TypeFactoryInterface::class, $newMap->getTypeFactory());
         $this->assertInstanceOf(NamingConventionInterface::class, $newMap->getSourceMemberNamingConvention());
@@ -75,7 +75,7 @@ class MapTest extends TestCase
         $newMap = $map->withMappedBy('mappedBy');
 
         $this->assertInstanceOf(Map::class, $newMap);
-        $this->assertEquals('mappedBy', $newMap->getMappedBy());
+        $this->assertEquals('mappedBy', $newMap->getAs());
     }
 
     public function testMapCanBeModifiedWithSourceMemberNamingConvention()

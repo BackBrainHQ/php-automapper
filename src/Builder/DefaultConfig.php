@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Builder;
 
-use Backbrain\Automapper\Contract\Builder\MapBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
+use Backbrain\Automapper\Contract\Builder\Map;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\ProfileInterface;
 
-class ProfileBuilder implements ProfileBuilderInterface
+class DefaultConfig implements Config
 {
     /**
      * @var ProfileInterface[]
@@ -17,19 +17,19 @@ class ProfileBuilder implements ProfileBuilderInterface
     private array $profiles = [];
 
     /**
-     * @var MapBuilder[]
+     * @var DefaultMap[]
      */
     private array $mapBuilders = [];
 
-    public function createMap(string $sourceType, string $destinationType): MapBuilderInterface
+    public function createMap(string $sourceType, string $destinationType): Map
     {
-        $builder = new MapBuilder($this, $sourceType, $destinationType);
+        $builder = new DefaultMap($this, $sourceType, $destinationType);
         $this->mapBuilders[] = $builder;
 
         return $builder;
     }
 
-    public function addProfile(ProfileInterface $profile): ProfileBuilderInterface
+    public function addProfile(ProfileInterface $profile): Config
     {
         $this->profiles[] = $profile;
 

@@ -6,7 +6,7 @@ namespace Backbrain\Automapper\Contract\Builder;
 
 use Backbrain\Automapper\Contract\ProfileInterface;
 
-interface ProfileBuilderInterface
+interface Config
 {
     /**
      * Initializes and configures the mapping between two types.
@@ -14,7 +14,7 @@ interface ProfileBuilderInterface
      * @param string $sourceType      the fully qualified class name (or built-in type) of the source type
      * @param string $destinationType the fully qualified class name (or built-in type) of the destination type
      */
-    public function createMap(string $sourceType, string $destinationType): MapBuilderInterface;
+    public function createMap(string $sourceType, string $destinationType): Map;
 
-    public function addProfile(ProfileInterface $profile): ProfileBuilderInterface;
+    public function addProfile(ProfileInterface $profile): Config;
 }

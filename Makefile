@@ -5,6 +5,10 @@
 _info:
 	@echo "Running make target '$(MAKECMDGOALS)' of '$(abspath $(lastword $(MAKEFILE_LIST)))'"
 
+.PHONY: docs
+docs: _info
+	$(MAKE) -C ./docs/site build
+
 .PHONY: vendors
 vendors: _info
 	composer install

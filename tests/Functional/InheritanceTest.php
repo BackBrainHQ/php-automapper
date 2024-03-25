@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Tests\Functional;
 
-use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
+use Backbrain\Automapper\Contract\Builder\Options;
 use Backbrain\Automapper\MapperConfiguration;
 use Backbrain\Automapper\Tests\Fixtures\BaseLvl0Dest;
 use Backbrain\Automapper\Tests\Fixtures\BaseLvl0Src;
@@ -19,7 +19,7 @@ class InheritanceTest extends TestCase
 {
     public function testIncludeBaseMap(): void
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
         );
 
@@ -29,9 +29,9 @@ class InheritanceTest extends TestCase
         $destination = $autoMapper->map($source, ScalarDest::class);
         $this->assertNull($destination->getBaseLvl1DestValue());
 
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(BaseLvl1Src::class, BaseLvl1Dest::class)
-                ->forMember('baseLvl1DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
+                ->forMember('baseLvl1DestValue', fn (Options $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
             ->createMap(ScalarSrc::class, ScalarDest::class)
                 ->includeBase(BaseLvl1Src::class, BaseLvl1Dest::class)
         );
@@ -46,11 +46,11 @@ class InheritanceTest extends TestCase
 
     public function testIncludeBaseMapMultiLevel(): void
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(BaseLvl0Src::class, BaseLvl0Dest::class)
-                ->forMember('baseLvl0DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl0Src $source) => $source->getBaseLvl0SrcValue()))
+                ->forMember('baseLvl0DestValue', fn (Options $opts) => $opts->mapFrom(fn (BaseLvl0Src $source) => $source->getBaseLvl0SrcValue()))
             ->createMap(BaseLvl1Src::class, BaseLvl1Dest::class)
-                ->forMember('baseLvl1DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
+                ->forMember('baseLvl1DestValue', fn (Options $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
             ->createMap(ScalarSrc::class, ScalarDest::class)
                 ->includeBase(BaseLvl1Src::class, BaseLvl1Dest::class)
         );
@@ -63,11 +63,11 @@ class InheritanceTest extends TestCase
         $destination = $autoMapper->map($source, ScalarDest::class);
         $this->assertNull($destination->getBaseLvl0DestValue());
 
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(BaseLvl0Src::class, BaseLvl0Dest::class)
-                ->forMember('baseLvl0DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl0Src $source) => $source->getBaseLvl0SrcValue()))
+                ->forMember('baseLvl0DestValue', fn (Options $opts) => $opts->mapFrom(fn (BaseLvl0Src $source) => $source->getBaseLvl0SrcValue()))
             ->createMap(BaseLvl1Src::class, BaseLvl1Dest::class)
-                ->forMember('baseLvl1DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
+                ->forMember('baseLvl1DestValue', fn (Options $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
                 ->includeBase(BaseLvl0Src::class, BaseLvl0Dest::class)
             ->createMap(ScalarSrc::class, ScalarDest::class)
                 ->includeBase(BaseLvl1Src::class, BaseLvl1Dest::class)
@@ -86,12 +86,12 @@ class InheritanceTest extends TestCase
 
     public function testInclude(): void
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
 //            ->createMap(BaseLvl0Src::class, BaseLvl0Dest::class)
 //                ->forMember('baseLvl0DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl0Src $source) => $source->getBaseLvl0SrcValue()))
 //                ->include(BaseLvl1Src::class, BaseLvl1Dest::class)
             ->createMap(BaseLvl1Src::class, BaseLvl1Dest::class)
-                ->forMember('baseLvl1DestValue', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
+                ->forMember('baseLvl1DestValue', fn (Options $opts) => $opts->mapFrom(fn (BaseLvl1Src $source) => $source->getBaseLvl1SrcValue()))
                 ->include(ScalarSrc::class, ScalarDest::class)
             ->createMap(ScalarSrc::class, ScalarDest::class)
         );

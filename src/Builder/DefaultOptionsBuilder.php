@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Builder;
 
-use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Options;
 use Backbrain\Automapper\Contract\MemberInterface;
 use Backbrain\Automapper\Contract\ValueResolverInterface;
+use Backbrain\Automapper\Helper\Func;
 use Backbrain\Automapper\Model\Member;
 
-class MemberOptionsBuilder implements MemberOptionsBuilderInterface
+class DefaultOptionsBuilder implements Options
 {
     private string $destinationPropertyPath;
 
@@ -40,51 +41,28 @@ class MemberOptionsBuilder implements MemberOptionsBuilderInterface
         );
     }
 
-    public function mapFrom(ValueResolverInterface|callable $valueProvider): MemberOptionsBuilderInterface
+    public function mapFrom(ValueResolverInterface|callable $valueProvider): Options
     {
-        if ($valueProvider instanceof ValueResolverInterface) {
-            $this->valueProvider = $valueProvider;
-
-            return $this;
-        }
-
-        $valueProvider = new class($valueProvider) implements ValueResolverInterface {
-            /**
-             * @var callable(object):mixed
-             */
-            private mixed $valueProvider;
-
-            public function __construct(callable $valueProvider)
-            {
-                $this->valueProvider = $valueProvider;
-            }
-
-            public function resolve(object $source): mixed
-            {
-                return ($this->valueProvider)($source);
-            }
-        };
-
-        $this->valueProvider = $valueProvider;
+        $this->valueProvider = Func::valueResolverFromFn($valueProvider);
 
         return $this;
     }
 
-    public function ignore(bool $ignore = true): MemberOptionsBuilderInterface
+    public function ignore(bool $ignore = true): Options
     {
         $this->ignore = $ignore;
 
         return $this;
     }
 
-    public function condition(callable $condition): MemberOptionsBuilderInterface
+    public function condition(callable $condition): Options
     {
         $this->conditionFn = $condition;
 
         return $this;
     }
 
-    public function nullSubstitute(mixed $value): MemberOptionsBuilderInterface
+    public function nullSubstitute(mixed $value): Options
     {
         $this->nullSubstitute = $value;
 
