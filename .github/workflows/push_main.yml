@@ -47,6 +47,7 @@ jobs:
           draft: false
 
   docs:
+    name: "Deploy documentation"
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write      # to deploy to Pages
