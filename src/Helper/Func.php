@@ -8,9 +8,37 @@ use Backbrain\Automapper\Contract\MappingActionInterface;
 use Backbrain\Automapper\Contract\ResolutionContextInterface;
 use Backbrain\Automapper\Contract\TypeConverterInterface;
 use Backbrain\Automapper\Contract\TypeFactoryInterface;
+use Backbrain\Automapper\Contract\ValueResolverInterface;
 
 class Func
 {
+    /**
+     * @param ValueResolverInterface|callable(object $source, ResolutionContextInterface $context):mixed $valueProvider
+     */
+    public static function valueResolverFromFn(ValueResolverInterface|callable $valueProvider): ValueResolverInterface
+    {
+        if ($valueProvider instanceof ValueResolverInterface) {
+            return $valueProvider;
+        }
+
+        return new class($valueProvider) implements ValueResolverInterface {
+            /**
+             * @var callable(object, ResolutionContextInterface):mixed
+             */
+            private mixed $valueProvider;
+
+            public function __construct(callable $valueProvider)
+            {
+                $this->valueProvider = $valueProvider;
+            }
+
+            public function resolve(object $source, ResolutionContextInterface $context): mixed
+            {
+                return ($this->valueProvider)($source, $context);
+            }
+        };
+    }
+
     /**
      * @param TypeFactoryInterface|callable(mixed $source, ResolutionContextInterface $context):object $factory
      */

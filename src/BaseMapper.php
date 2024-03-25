@@ -128,7 +128,7 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
         $stack[] = $map->getDestinationType();
 
         $result = Map::from($map);
-        $mappedBy = $map->getMappedBy();
+        $mappedBy = $map->getAs();
         if (null !== $mappedBy) {
             $mappedByMap = $this->resolveMap($this->mustGetMap($maps, $map->getSourceType(), $mappedBy), $maps, $stack);
             $result = Map::merge($result, $mappedByMap)

@@ -6,5 +6,5 @@ namespace Backbrain\Automapper\Contract;
 
 interface ValueResolverInterface
 {
-    public function resolve(object $source): mixed;
+    public function resolve(object $source, ResolutionContextInterface $context): mixed;
 }

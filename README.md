@@ -1,6 +1,11 @@
 # PHP AutoMapper
 
-PHP AutoMapper is a library designed to simplify the mapping of data between objects, inspired by the popular .NET library AutoMapper. It aims to reduce boilerplate code necessary for transferring data from one object structure to another, making your PHP application cleaner and maintenance easier.
+PHP AutoMapper is a library designed to simplify the mapping of data between objects, inspired by the 
+popular .NET library AutoMapper. It aims to reduce boilerplate code necessary for transferring data from 
+one object structure to another, making your PHP application cleaner and maintenance easier.
+
+**Note:** This project is still in alpha development and may not yet support all features of the original AutoMapper library.
+Interfaces and methods may change even in minor releases until a stable version v1.x is reached.
 
 ## Installation
 
@@ -12,7 +17,8 @@ composer require backbrain/php-automapper
 
 ## Features
 
-PHP AutoMapper strives to implement the core functionalities of the original .NET AutoMapper library. Here's a list of supported features:
+PHP AutoMapper strives to implement the core functionalities of the original .NET AutoMapper library. 
+Here's a list of supported features:
 
 - [x] Convention-based mapping
 - [x] Custom value resolvers
@@ -25,43 +31,45 @@ PHP AutoMapper strives to implement the core functionalities of the original .NE
 - [ ] Inline mapping configuration
 - [x] Mapping to existing objects
 
-Please note that due to differences between C# and PHP, not all features from the original AutoMapper library are applicable or have been implemented at this stage.
+Please note that due to differences between C# and PHP, not all features from the original AutoMapper 
+library are applicable or have been implemented at this stage.
+
+## Documentation
+
+For a detailed documentation, please refer to the [PHP AutoMapper Documentation](https://backbrainhq.github.io/php-automapper) site.
+
+For general usage patterns and understanding AutoMapper concepts, please refer to the original AutoMapper
+documentation:
+
+[.NET AutoMapper Documentation](https://docs.automapper.org/en/latest/)
+
+The concepts and configurations explained in the original documentation serve as a basis for understanding
+how to use PHP AutoMapper effectively. Where PHP AutoMapper diverges or extends the original library's functionality, specific documentation and examples will be provided within this project's wiki or documentation directory.
+
 
 ## Usage Example 
 
 Here's a simple example of how to use PHP AutoMapper to map data between two objects.
 For more examples and detailed usage instructions, please refer to the [examples](docs/examples) directory.
 
-
 ```php
 <?php
 // php docs/example/01_basic.php
-use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Options;
+use Backbrain\Automapper\Contract\Builder\Config;
 use Backbrain\Automapper\MapperConfiguration;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 class AccountDTO {
     public string $givenName;
-
     public string $familyName;
-
-    public int $age;
-
-    public float $height;
 }
 
 class ProfileDTO {
     private string $givenName;
-
     private string $familyName;
-
     private string $fullName;
-
-    private int $age;
-
-    private float $height;
 
     public function setGivenName(string $givenName): ProfileDTO
     {
@@ -80,27 +88,15 @@ class ProfileDTO {
         $this->fullName = $fullName;
         return $this;
     }
-
-    public function setAge(int $age): ProfileDTO
-    {
-        $this->age = $age;
-        return $this;
-    }
-
-    public function setHeight(float $height): ProfileDTO
-    {
-        $this->height = $height;
-        return $this;
-    }
 }
 
 
-$config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+$config = new MapperConfiguration(fn (Config $config) => $config
     ->createMap(AccountDTO::class, ProfileDTO::class)
     ->forMember(
         'fullName',
-        fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(
-            fn (AccountDTO $source) => sprintf('%s %s (%d)', $source->givenName, $source->familyName, $source->age)
+        fn (Options $opts) => $opts->mapFrom(
+            fn (AccountDTO $source) => sprintf('%s %s', $source->givenName, $source->familyName)
         )
     )
 );
@@ -108,8 +104,6 @@ $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $confi
 $account = new AccountDTO();
 $account->givenName = 'John';
 $account->familyName = 'Doe';
-$account->age = 30;
-$account->height = 1.75;
 
 $autoMapper = $config->createMapper();
 $profile = $autoMapper->map($account, ProfileDTO::class);
@@ -121,25 +115,16 @@ The dump shows the new ProfileDTO with the mapped properties:
 ^ ProfileDTO^ {#45
   -givenName: "John"
   -familyName: "Doe"
-  -fullName: "John Doe (30)"
-  -age: 30
-  -height: 1.75
+  -fullName: "John Doe"
 }
 ```
 
 For more examples and detailed usage instructions, please refer to the [examples](docs/examples) directory.
 
-## Documentation
-
-For general usage patterns and understanding AutoMapper concepts, please refer to the original AutoMapper documentation:
-
-[AutoMapper Documentation](https://docs.automapper.org/en/latest/)
-
-The concepts and configurations explained in the original documentation serve as a basis for understanding how to use PHP AutoMapper effectively. Where PHP AutoMapper diverges or extends the original library's functionality, specific documentation and examples will be provided within this project's wiki or documentation directory.
-
 ## Contributing
 
-Contributions to PHP AutoMapper are welcome! Whether it's adding new features, improving existing ones, or writing documentation, your help is appreciated. Please refer to the CONTRIBUTING.md file for guidelines on how to contribute to this project.
+Contributions to PHP AutoMapper are welcome! Whether it's adding new features, improving existing ones, 
+or writing documentation, your help is appreciated. Please refer to the CONTRIBUTING.md file for guidelines on how to contribute to this project.
 
 ### Commit messages
 
@@ -170,4 +155,5 @@ PHP AutoMapper is open-sourced software licensed under the [MIT license](LICENSE
 
 ---
 
-This project is not affiliated with the original AutoMapper project but is inspired by its functionality and aims to bring similar capabilities to the PHP community.
+This project is not affiliated with the original AutoMapper project but is inspired by its functionality 
+and aims to bring similar capabilities to the PHP community.

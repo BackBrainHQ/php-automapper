@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Tests\Functional;
 
-use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
+use Backbrain\Automapper\Contract\Builder\Options;
 use Backbrain\Automapper\MapperConfiguration;
 use Backbrain\Automapper\Profiles\ScalarToStringProfile;
 use Backbrain\Automapper\Tests\Fixtures\ScalarDest;
@@ -17,7 +17,7 @@ class ExtensibilityTest extends TestCase
 {
     public function testBeforeMap()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
             ->beforeMap(fn (ScalarSrc $source, ScalarDest $destination) => $source->aString = 'BeforeMap')
         );
@@ -32,7 +32,7 @@ class ExtensibilityTest extends TestCase
 
     public function testAfterMap()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
             ->afterMap(fn (ScalarSrc $source, ScalarDest $destination) => $destination->aString = 'AfterMap')
         );
@@ -47,9 +47,9 @@ class ExtensibilityTest extends TestCase
 
     public function testCondition()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
-            ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->condition(fn (ScalarSrc $source) => 'John Doe' === $source->aString))
+            ->forMember('aString', fn (Options $opts) => $opts->condition(fn (ScalarSrc $source) => 'John Doe' === $source->aString))
         );
 
         $autoMapper = $config->createMapper();
@@ -67,9 +67,9 @@ class ExtensibilityTest extends TestCase
 
     public function testNullSubstitute()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
-            ->forMember('aNullString', fn (MemberOptionsBuilderInterface $opts) => $opts->nullSubstitute('Substitute'))
+            ->forMember('aNullString', fn (Options $opts) => $opts->nullSubstitute('Substitute'))
         );
 
         $autoMapper = $config->createMapper();
@@ -81,7 +81,7 @@ class ExtensibilityTest extends TestCase
 
     public function testScalarToStringConversion()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->addProfile(new ScalarToStringProfile())
             ->createMap(ScalarSrc::class, ScalarDestAllString::class)
         );

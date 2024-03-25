@@ -15,7 +15,7 @@ interface MapInterface
 
     public function getTypeFactory(): ?TypeFactoryInterface;
 
-    public function getMappedBy(): ?string;
+    public function getAs(): ?string;
 
     public function getSourceType(): string;
 

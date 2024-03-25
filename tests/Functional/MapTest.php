@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Backbrain\Automapper\Tests\Functional;
 
 use Backbrain\Automapper\AutoMapper;
-use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
+use Backbrain\Automapper\Contract\Builder\Options;
 use Backbrain\Automapper\Converter\Naming\CamelCaseNamingConvention;
 use Backbrain\Automapper\Converter\Naming\SnakeCaseNamingConvention;
 use Backbrain\Automapper\Exceptions\MapperException;
@@ -35,7 +35,7 @@ class MapTest extends TestCase
 
     public function testDefaultMappingBehavior()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
         );
 
@@ -54,9 +54,9 @@ class MapTest extends TestCase
 
     public function testDefaultMappingBehaviorWithIgnoredMember()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
-            ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->ignore())
+            ->forMember('aString', fn (Options $opts) => $opts->ignore())
         );
 
         $autoMapper = $config->createMapper();
@@ -75,9 +75,9 @@ class MapTest extends TestCase
 
     public function testMapFrom()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDestWithAnotherString::class)
-            ->forMember('anotherString', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => sprintf('%s (%d)', $source->aString, $source->anInt)))
+            ->forMember('anotherString', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => sprintf('%s (%d)', $source->aString, $source->anInt)))
         );
 
         $autoMapper = $config->createMapper();
@@ -94,7 +94,7 @@ class MapTest extends TestCase
         $this->expectException(MapperException::class);
         $this->expectExceptionCode(MapperException::CLASS_NOT_FOUND);
 
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, 'NonExistentClass')
         );
 
@@ -106,7 +106,7 @@ class MapTest extends TestCase
 
     public function testDefaultMappingBehaviorWithNamingConventions()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDestSnakeCase::class)
             ->destinationMemberNamingConvention(SnakeCaseNamingConvention::class)
             ->sourceMemberNamingConvention(CamelCaseNamingConvention::class)
@@ -126,7 +126,7 @@ class MapTest extends TestCase
 
     public function testDefaultMappingBehaviorWithObject()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
         );
 
@@ -144,7 +144,7 @@ class MapTest extends TestCase
 
     public function testObjectMappingWithNamingConvention()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ObjectSrc::class, ObjectDest::class)
             ->createMap(ScalarSrc::class, ScalarDestSnakeCase::class)
             ->destinationMemberNamingConvention(SnakeCaseNamingConvention::class)
@@ -165,7 +165,7 @@ class MapTest extends TestCase
 
     public function testObjectMappingDestSameType()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ObjectSrc::class, ObjectDestSameType::class)
         );
 

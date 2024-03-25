@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Builder;
 
-use Backbrain\Automapper\Contract\Builder\MapBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\MappingActionInterface;
 use Backbrain\Automapper\Contract\MemberInterface;
@@ -16,7 +15,7 @@ use Backbrain\Automapper\Contract\TypeFactoryInterface;
 use Backbrain\Automapper\Helper\Func;
 use Backbrain\Automapper\Model\Map;
 
-class MapBuilder implements MapBuilderInterface
+class DefaultMap implements \Backbrain\Automapper\Contract\Builder\Map
 {
     private ?TypeConverterInterface $typeConverter = null;
 
@@ -35,7 +34,7 @@ class MapBuilder implements MapBuilderInterface
      */
     private array $members = [];
 
-    private ?string $mappedBy = null;
+    private ?string $as = null;
 
     /**
      * @var MapInterface[]
@@ -45,7 +44,7 @@ class MapBuilder implements MapBuilderInterface
     private ?MapInterface $includeBaseMap = null;
 
     public function __construct(
-        private readonly ProfileBuilderInterface $mapperConfigurationBuilder,
+        private readonly Config $mapperConfigurationBuilder,
         private readonly string $sourceType,
         private readonly string $destinationType
     ) {
@@ -57,7 +56,7 @@ class MapBuilder implements MapBuilderInterface
             sourceType: $this->sourceType,
             destinationType: $this->destinationType,
             members: $this->members,
-            mappedBy: $this->mappedBy,
+            as: $this->as,
             includeMaps: $this->includeMaps,
             includeBaseMap: $this->includeBaseMap,
             typeConverter: $this->typeConverter,
@@ -107,19 +106,19 @@ class MapBuilder implements MapBuilderInterface
         return $this;
     }
 
-    public function createMap(string $sourceType, string $destinationType): MapBuilderInterface
+    public function createMap(string $sourceType, string $destinationType): \Backbrain\Automapper\Contract\Builder\Map
     {
         return $this->mapperConfigurationBuilder->createMap($sourceType, $destinationType);
     }
 
-    public function addProfile(ProfileInterface $profile): ProfileBuilderInterface
+    public function addProfile(ProfileInterface $profile): Config
     {
         return $this->mapperConfigurationBuilder->addProfile($profile);
     }
 
     public function forMember(string $destinationProperty, callable $optFn): static
     {
-        $builder = new MemberOptionsBuilder($destinationProperty);
+        $builder = new DefaultOptionsBuilder($destinationProperty);
         $optFn($builder);
 
         // override duplicate member definition with the current
@@ -144,9 +143,9 @@ class MapBuilder implements MapBuilderInterface
         return $this;
     }
 
-    public function mappedBy(string $destinationType): static
+    public function as(string $destinationType): static
     {
-        $this->mappedBy = $destinationType;
+        $this->as = $destinationType;
 
         return $this;
     }

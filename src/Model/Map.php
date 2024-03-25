@@ -21,7 +21,7 @@ class Map implements MapInterface
         private string $sourceType,
         private string $destinationType,
         private array $members = [],
-        private ?string $mappedBy = null,
+        private ?string $as = null,
         private array $includeMaps = [],
         private ?MapInterface $includeBaseMap = null,
         private ?TypeConverterInterface $typeConverter = null,
@@ -39,7 +39,7 @@ class Map implements MapInterface
             sourceType: $map->getSourceType(),
             destinationType: $map->getDestinationType(),
             members: $map->getMembers(),
-            mappedBy: $map->getMappedBy(),
+            as: $map->getAs(),
             includeMaps: $map->getIncludeMaps(),
             includeBaseMap: $map->getIncludeBaseMap(),
             typeConverter: $map->getTypeConverter(),
@@ -61,7 +61,7 @@ class Map implements MapInterface
     public static function merge(MapInterface $from, MapInterface $into): self
     {
         $map = self::from($into);
-        $map->mappedBy = $from->getMappedBy() ?? $into->getMappedBy();
+        $map->as = $from->getAs() ?? $into->getAs();
         $map->typeConverter = $from->getTypeConverter() ?? $into->getTypeConverter();
         $map->typeFactory = $from->getTypeFactory() ?? $into->getTypeFactory();
         $map->sourceMemberNamingConvention = $from->getSourceMemberNamingConvention() ?? $into->getSourceMemberNamingConvention();
@@ -122,7 +122,7 @@ class Map implements MapInterface
     public function withMappedBy(?string $mappedBy): self
     {
         $map = self::from($this);
-        $map->mappedBy = $mappedBy;
+        $map->as = $mappedBy;
 
         return $map;
     }
@@ -213,9 +213,9 @@ class Map implements MapInterface
         return $this->destinationMemberNamingConvention;
     }
 
-    public function getMappedBy(): ?string
+    public function getAs(): ?string
     {
-        return $this->mappedBy;
+        return $this->as;
     }
 
     public function getBeforeMap(): ?MappingActionInterface

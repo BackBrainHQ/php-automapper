@@ -10,12 +10,12 @@ use Backbrain\Automapper\Contract\ResolutionContextInterface;
 use Backbrain\Automapper\Contract\TypeConverterInterface;
 use Backbrain\Automapper\Contract\TypeFactoryInterface;
 
-interface MapBuilderInterface extends ProfileBuilderInterface
+interface Map extends Config
 {
     /**
      * Configures a mapping between a source member and a destination member.
      *
-     * @param callable(MemberOptionsBuilderInterface):void $optFn
+     * @param callable(Options):void $optFn
      */
     public function forMember(string $destinationProperty, callable $optFn): static;
 
@@ -38,7 +38,7 @@ interface MapBuilderInterface extends ProfileBuilderInterface
      *
      * @param class-string $destinationType
      */
-    public function mappedBy(string $destinationType): static;
+    public function as(string $destinationType): static;
 
     /**
      * Naming convention for source members.

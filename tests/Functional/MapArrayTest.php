@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Tests\Functional;
 
-use Backbrain\Automapper\Contract\Builder\MemberOptionsBuilderInterface;
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
+use Backbrain\Automapper\Contract\Builder\Options;
 use Backbrain\Automapper\Converter\Naming\CamelCaseNamingConvention;
 use Backbrain\Automapper\Converter\Naming\SnakeCaseNamingConvention;
 use Backbrain\Automapper\MapperConfiguration;
@@ -21,10 +21,10 @@ class MapArrayTest extends TestCase
 {
     public function testMappingArrayOfStringToUntypedArray()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-            ->forMember('anArrayOfMixed', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
-            ->forMember('anUntypedArray', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
+            ->forMember('anArrayOfMixed', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
+            ->forMember('anUntypedArray', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
         );
 
         $autoMapper = $config->createMapper();
@@ -38,10 +38,10 @@ class MapArrayTest extends TestCase
 
     public function testMappingArrayOfStringToTypedArray()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-            ->forMember('anArrayOfMixed', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
-            ->forMember('anUntypedArray', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
+            ->forMember('anArrayOfMixed', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
+            ->forMember('anUntypedArray', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStrings))
         );
 
         $autoMapper = $config->createMapper();
@@ -55,9 +55,9 @@ class MapArrayTest extends TestCase
 
     public function testMappingArrayOfStringInt()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-            ->forMember('anArrayOfStringInt', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStringInt))
+            ->forMember('anArrayOfStringInt', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfStringInt))
         );
 
         $autoMapper = $config->createMapper();
@@ -70,9 +70,9 @@ class MapArrayTest extends TestCase
 
     public function testMappingArrayOfObject()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-            ->forMember('anArrayOfScalarDestSnakeCase', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
+            ->forMember('anArrayOfScalarDestSnakeCase', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
             ->createMap(ScalarSrc::class, ScalarDestSnakeCase::class)
             ->destinationMemberNamingConvention(SnakeCaseNamingConvention::class)
             ->sourceMemberNamingConvention(CamelCaseNamingConvention::class)
@@ -100,16 +100,16 @@ class MapArrayTest extends TestCase
 
     public function testMappingArrayOfObjectUsingTypeFactory()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-                ->forMember('anArrayOfScalarDestInterface', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
+                ->forMember('anArrayOfScalarDestInterface', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
             ->createMap(ScalarSrc::class, ScalarDest::class)
-                ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->ignore()) // expected to be overridden
-                ->forMember('aFloat', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aFloat))
+                ->forMember('aString', fn (Options $opts) => $opts->ignore()) // expected to be overridden
+                ->forMember('aFloat', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aFloat))
                 ->constructUsing(fn (ScalarSrc $source) => (new ScalarDest())->setUnmapped('wrong'))
             ->createMap(ScalarSrc::class, ScalarDestInterface::class)
-                ->mappedBy(ScalarDest::class)
-                ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aString))
+                ->as(ScalarDest::class)
+                ->forMember('aString', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aString))
                 ->constructUsing(fn (ScalarSrc $source) => (new ScalarDest())->setUnmapped('factory'))
         );
 
@@ -136,16 +136,16 @@ class MapArrayTest extends TestCase
 
     public function testMappingTypeFactoryFromMappedBy()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-                ->forMember('anArrayOfScalarDestInterface', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
+                ->forMember('anArrayOfScalarDestInterface', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
             ->createMap(ScalarSrc::class, ScalarDest::class)
-                ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->ignore()) // expected to be overridden
-                ->forMember('aFloat', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aFloat))
+                ->forMember('aString', fn (Options $opts) => $opts->ignore()) // expected to be overridden
+                ->forMember('aFloat', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aFloat))
                 ->constructUsing(fn (ScalarSrc $source) => (new ScalarDest())->setUnmapped('factory'))
             ->createMap(ScalarSrc::class, ScalarDestInterface::class)
-                ->mappedBy(ScalarDest::class)
-                ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aString))
+                ->as(ScalarDest::class)
+                ->forMember('aString', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aString))
         );
 
         $autoMapper = $config->createMapper();
@@ -167,15 +167,15 @@ class MapArrayTest extends TestCase
 
     public function testMappingDefaultTypeFactoryFromMappedBy()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ArraySrc::class, ArrayDest::class)
-                ->forMember('anArrayOfScalarDestInterface', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
+                ->forMember('anArrayOfScalarDestInterface', fn (Options $opts) => $opts->mapFrom(fn (ArraySrc $source) => $source->srcArrayOfScalarSrc))
             ->createMap(ScalarSrc::class, ScalarDest::class)
-                ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->ignore()) // expected to be overridden
-                ->forMember('aFloat', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aFloat))
+                ->forMember('aString', fn (Options $opts) => $opts->ignore()) // expected to be overridden
+                ->forMember('aFloat', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aFloat))
             ->createMap(ScalarSrc::class, ScalarDestInterface::class)
-                ->mappedBy(ScalarDest::class)
-                ->forMember('aString', fn (MemberOptionsBuilderInterface $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aString))
+                ->as(ScalarDest::class)
+                ->forMember('aString', fn (Options $opts) => $opts->mapFrom(fn (ScalarSrc $source) => $source->aString))
         );
 
         $autoMapper = $config->createMapper();

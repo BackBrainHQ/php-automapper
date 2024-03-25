@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Tests\Functional;
 
-use Backbrain\Automapper\Contract\Builder\ProfileBuilderInterface;
+use Backbrain\Automapper\Contract\Builder\Config;
 use Backbrain\Automapper\Converter\Naming\CamelCaseNamingConvention;
 use Backbrain\Automapper\Converter\Naming\SnakeCaseNamingConvention;
 use Backbrain\Automapper\Helper\Type;
@@ -22,7 +22,7 @@ class CollectionTest extends TestCase
 {
     public function testMapIterableIndexed()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
             ->createMap(ScalarSrc::class, ScalarDestSnakeCase::class)
             ->destinationMemberNamingConvention(SnakeCaseNamingConvention::class)
@@ -63,7 +63,7 @@ class CollectionTest extends TestCase
 
     public function testMapIterableKey()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
             ->createMap(ScalarSrc::class, ScalarDestSnakeCase::class)
             ->destinationMemberNamingConvention(SnakeCaseNamingConvention::class)
@@ -104,7 +104,7 @@ class CollectionTest extends TestCase
 
     public function testMapIterableWithMap()
     {
-        $config = new MapperConfiguration(fn (ProfileBuilderInterface $config) => $config
+        $config = new MapperConfiguration(fn (Config $config) => $config
             ->createMap(ScalarSrc::class, ScalarDest::class)
             ->createMap(ScalarSrc::class, ScalarDestSnakeCase::class)
             ->destinationMemberNamingConvention(SnakeCaseNamingConvention::class)

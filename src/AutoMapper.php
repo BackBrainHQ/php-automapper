@@ -216,7 +216,7 @@ class AutoMapper extends BaseMapper
     {
         $valueProvider = $member->getValueProvider();
         if (null !== $valueProvider) {
-            return [$valueProvider->resolve($source), true];
+            return [$valueProvider->resolve($source, $this->newResolutionContext($map, $member, $source)), true];
         }
 
         $propertyName = $this->translatePropertyName($map, $member->getDestinationProperty(), $map->getSourceMemberNamingConvention());
