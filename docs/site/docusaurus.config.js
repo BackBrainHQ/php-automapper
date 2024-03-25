@@ -97,6 +97,14 @@ const config = {
                 label: 'Getting Started',
                 to: '/docs/getting-started-guide',
               },
+              {
+                label: 'Features',
+                to: '/docs/category/features',
+              },
+              {
+                label: 'Extensibility',
+                to: '/docs/category/extensibility',
+              },
             ],
           },
           {
