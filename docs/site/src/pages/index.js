@@ -20,7 +20,7 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/getting-started-guide">
-            Getting started with PHP AutoMapper - 5min ⏱️
+            Getting Started - 3min ⏱️
           </Link>
         </div>
       </div>

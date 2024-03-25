@@ -1,6 +1,8 @@
 {
     "name": "backbrain/php-automapper",
     "description": "PHP port of the popular automapper.org library",
+    "keywords": ["automapper", "mapping", "object", "mapper", "mapping", "object-mapper"],
+    "homepage": "https://backbrainhq.github.io/php-automapper/",
     "type": "library",
     "license": "MIT",
     "autoload": {
