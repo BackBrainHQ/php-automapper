@@ -51,7 +51,7 @@ To use your custom type converter, you need to specify it in your `MapperConfigu
 ```php
 $config = new MapperConfiguration(fn (Config $config) => $config
     ->createMap(\DateTime::class, 'string')
-        ->convertUsing(CustomDateTimeToStringConverter::class)
+        ->convertUsing(new CustomDateTimeToStringConverter())
 );
 ```
 
