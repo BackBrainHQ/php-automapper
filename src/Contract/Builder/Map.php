@@ -15,21 +15,31 @@ interface Map extends Config
     /**
      * Configures a mapping between a source member and a destination member.
      *
-     * @param callable(Options):void $optFn
+     * @param callable(Options):mixed $optFn
      */
     public function forMember(string $destinationProperty, callable $optFn): static;
 
     /**
      * If you need full control over the mapping process, you can use this method to provide a custom type converter.
-     *
-     * @param TypeConverterInterface|callable(mixed $source, ResolutionContextInterface $context):mixed $converter
+     * It takes a callable as a parameter.
+     * Example:
+     * ```php
+     * ->convertUsing(function (string $source, ResolutionContextInterface $context): int {
+     *    return intval($source->getFoo());
+     * });
+     * ```.
      */
     public function convertUsing(TypeConverterInterface|callable $converter): static;
 
     /**
      * Destination type factory.
-     *
-     * @param TypeFactoryInterface|callable(mixed $source, ResolutionContextInterface $context):object $factory
+     * It takes a callable as a parameter.
+     * Example:
+     * ```php
+     * ->constructUsing(function (mixed $source, ResolutionContextInterface $context): object {
+     *   return new Foo($source->getFoo());
+     * });
+     * ```.
      */
     public function constructUsing(TypeFactoryInterface|callable $factory): static;
 
