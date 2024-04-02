@@ -10,14 +10,26 @@ use Backbrain\Automapper\Contract\ValueResolverInterface;
 interface Options
 {
     /**
-     * @param ValueResolverInterface|callable(object $source, ResolutionContextInterface $context):mixed $valueProvider
+     * It takes a callable or a ValueResolverInterface as a parameter.
+     * Example:
+     * ```php
+     * ->mapFrom(function (object $source, ResolutionContextInterface $context): mixed {
+     *    return $source->getFoo();
+     * });
+     * ```.
      */
     public function mapFrom(ValueResolverInterface|callable $valueProvider): Options;
 
     public function ignore(bool $ignore = true): Options;
 
     /**
-     * @param callable(mixed $source):bool $condition
+     * It takes a callable as a parameter. Only if the callable returns true, the member will be mapped.
+     * Example:
+     * ```php
+     * ->condition(function (object $source): bool {
+     *   return $source->getFoo() !== null;
+     * });
+     * ```.
      */
     public function condition(callable $condition): Options;
 
