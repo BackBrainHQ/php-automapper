@@ -48,11 +48,14 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
      */
     protected array $maps = [];
 
-    public function __construct(MapperConfigurationInterface $mapperConfiguration, ?CacheItemPoolInterface $cacheItemPool = null, ?LoggerInterface $logger = null)
+    public function __construct(
+        MapperConfigurationInterface $mapperConfiguration,
+        private readonly ?CacheItemPoolInterface $cacheItemPool = null,
+        ?LoggerInterface $logger = null)
     {
         $this->logger = $logger ?? new NullLogger();
         $this->propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()
-            ->setCacheItemPool($cacheItemPool)
+            ->setCacheItemPool($this->cacheItemPool)
             ->getPropertyAccessor()
         ;
 
