@@ -15,7 +15,7 @@ class MapperConfiguration implements MapperConfigurationInterface
     private DefaultConfig $builder;
 
     /**
-     * @param (callable(Config $cnf):Config)|null $configFn
+     * @param (callable(Config $cnf):mixed)|null $configFn
      */
     public function __construct(?callable $configFn = null)
     {
