@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Bundle\DependencyInjection;
 
-use Backbrain\Automapper\AsProfile;
+use Backbrain\Automapper\Contract\Attributes\AsProfile;
+use Backbrain\Automapper\Contract\Attributes\Source;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -28,13 +29,20 @@ class AutomapperExtension extends Extension implements ConfigurationInterface
         $factoryDefinition = $container->findDefinition('backbrain_automapper_factory');
 
         $cacheAdapterServiceId = $config['cache_adapter'];
-        $factoryDefinition->addMethodCall('setCacheItemPool', [new Reference($cacheAdapterServiceId)]);
-
         $loggerServiceId = $config['logger'];
+
+        $factoryDefinition->addMethodCall('setCacheItemPool', [new Reference($cacheAdapterServiceId)]);
         $factoryDefinition->addMethodCall('setLogger', [new Reference($loggerServiceId)]);
 
         $container->registerAttributeForAutoconfiguration(AsProfile::class, static function (ChildDefinition $definition, AsProfile $attribute) {
             $definition->addTag('backbrain_automapper_profile');
+        });
+
+        $container->registerAttributeForAutoconfiguration(Source::class, static function (ChildDefinition $definition, Source $attribute) {
+            $definition->addTag('backbrain_automapper_model', [
+                'source' => $attribute->getSource(),
+                'include' => $attribute->getInclude(),
+            ]);
         });
     }
 

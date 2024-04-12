@@ -17,5 +17,17 @@ class AutomapperCompilerPass implements CompilerPassInterface
         foreach ($container->findTaggedServiceIds('backbrain_automapper_profile') as $id => $tags) {
             $factoryDefinition->addMethodCall('addProfile', [new Reference($id)]);
         }
+
+        foreach ($container->findTaggedServiceIds('backbrain_automapper_model') as $id => $tags) {
+            $def = $container->findDefinition($id);
+
+            foreach ($tags as $tag) {
+                $factoryDefinition->addMethodCall('addModel', [
+                    '$dest' => $def->getClass(),
+                    '$source' => $tag['source'] ?? null,
+                    '$include' => $tag['include'] ?? null,
+                ]);
+            }
+        }
     }
 }
