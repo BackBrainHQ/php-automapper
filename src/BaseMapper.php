@@ -12,6 +12,7 @@ use Backbrain\Automapper\Contract\NamingConventionInterface;
 use Backbrain\Automapper\Contract\ResolutionContextInterface;
 use Backbrain\Automapper\Exceptions\MapperException;
 use Backbrain\Automapper\Helper\Func;
+use Backbrain\Automapper\Helper\Property;
 use Backbrain\Automapper\Model\Map;
 use Backbrain\Automapper\Model\Member;
 use PHPStan\PhpDocParser\Lexer\Lexer;
@@ -23,14 +24,8 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
-use Symfony\Component\PropertyInfo\Extractor\PhpStanExtractor;
-use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PhpStan\NameScope;
-use Symfony\Component\PropertyInfo\PropertyInfoCacheExtractor;
-use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
 use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
@@ -50,28 +45,12 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 
     public function __construct(
         MapperConfigurationInterface $mapperConfiguration,
-        private readonly ?CacheItemPoolInterface $cacheItemPool = null,
+        ?CacheItemPoolInterface $cacheItemPool = null,
         ?LoggerInterface $logger = null)
     {
         $this->logger = $logger ?? new NullLogger();
-        $this->propertyAccessor = PropertyAccess::createPropertyAccessorBuilder()
-            ->setCacheItemPool($this->cacheItemPool)
-            ->getPropertyAccessor()
-        ;
-
-        $phpStanExtractor = new PhpStanExtractor();
-        $reflectionExtractor = new ReflectionExtractor();
-        $phpDocExtractor = new PhpDocExtractor();
-
-        $propertyInfoExtractor = new PropertyInfoExtractor(
-            listExtractors: [$reflectionExtractor],
-            typeExtractors: [$phpStanExtractor, $reflectionExtractor],
-            descriptionExtractors: [$phpDocExtractor],
-            accessExtractors: [$reflectionExtractor],
-            initializableExtractors: [$reflectionExtractor]
-        );
-
-        $this->propertyInfoExtractor = null === $cacheItemPool ? $propertyInfoExtractor : new PropertyInfoCacheExtractor($propertyInfoExtractor, $cacheItemPool);
+        $this->propertyAccessor = Property::newPropertyAccessor($cacheItemPool);
+        $this->propertyInfoExtractor = Property::newPropertyInfoExtractor($cacheItemPool);
 
         $this->applyMaps($mapperConfiguration->getMaps());
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Backbrain\Automapper;
+namespace Backbrain\Automapper\Contract\Attributes;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class AsProfile

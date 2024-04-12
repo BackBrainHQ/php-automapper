@@ -42,6 +42,8 @@ backbrain_automapper:
 You can inject the `AutoMapper` service into your controllers or services by using auto-wire the `AutoMapperInterface` interface.
 
 ```php
+use Backbrain\Automapper\Contract\AutoMapperInterface;
+
 class ApiService
 {
     public function __construct(
@@ -65,11 +67,11 @@ For convenience, AutoMapper provides attributes to configure you AutoMapper inst
 #### AsProfile
 
 ```php
-use Backbrain\Automapper\AsProfile;
+use Backbrain\Automapper\Contract\Attributes as Map;
 use Backbrain\Automapper\Profile;
 use Symfony\Component\Uid\Uuid;
 
-#[AsProfile]
+#[Map\AsProfile]
 class GlobalProfile extends Profile
 {
     public function __construct()

@@ -39,6 +39,10 @@
         "symfony/var-dumper": "*",
         "doctrine/collections": "^2.2",
         "symfony/framework-bundle": "^6.3|^7.0",
-        "symfony/filesystem": "^6.3|^7.0"
+        "symfony/filesystem": "^6.3|^7.0",
+        "symfony/expression-language": "^6.3|^7.0"
+    },
+    "suggest": {
+        "symfony/expression-language": "To use the FromExpr attribute"
     }
 }
