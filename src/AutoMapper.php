@@ -79,7 +79,7 @@ class AutoMapper extends BaseMapper
                 continue;
             }
 
-            if (null !== $member->getCondition() && !$member->getCondition()($srcValue)) {
+            if (null !== $member->getCondition() && !$member->getCondition()($srcValue, $this->newResolutionContext(map: $map, source: $srcValue))) {
                 $this->logger->debug('Member condition returned false.', [
                     'source' => $srcValue,
                     'destination' => $destValue,
