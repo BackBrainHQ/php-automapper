@@ -137,7 +137,7 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
     {
         $map = $this->getMap($maps, $sourceType, $destinationType);
         if (null === $map) {
-            throw MapperException::newMissingMapException($sourceType, $destinationType);
+            throw MapperException::newMissingMapException($this->canonicalize($sourceType), $this->canonicalize($destinationType));
         }
 
         return $map;
@@ -279,7 +279,11 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
     protected function canonicalize(string $type): string
     {
         // we want to have no whitespaces
-        return ltrim(str_replace(' ', '', str_replace('\\\\', '\\', trim($type))), '\\');
+        $type = ltrim(str_replace(' ', '', str_replace('\\\\', '\\', trim($type))), '\\');
+
+        // TODO find a better way to handle Proxies\\__CG__\\ namespace and make it somehow configurable
+        // strip Proxies\\__CG__\\ prefix from type
+        return preg_replace('/^Proxies\\\__CG__\\\/', '', $type) ?? $type;
     }
 
     protected function isType(mixed $value, string $expectedType): bool

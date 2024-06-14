@@ -13,7 +13,7 @@ interface MemberInterface
     public function isIgnored(): bool;
 
     /**
-     * @return callable(mixed $source):bool|null
+     * @return callable(mixed $source, ResolutionContextInterface $context):bool|null
      */
     public function getCondition(): ?callable;
 
