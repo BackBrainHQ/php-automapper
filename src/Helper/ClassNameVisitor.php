@@ -8,6 +8,9 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeVisitorAbstract;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class ClassNameVisitor extends NodeVisitorAbstract
 {
     /**

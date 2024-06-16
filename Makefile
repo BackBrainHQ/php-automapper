@@ -34,10 +34,20 @@ lint-fix: _info
 	php vendor/bin/php-cs-fixer fix --diff
 
 .PHONY: test
-test: _info _test-stan _test-unit-low-deps _test-unit-high-deps
+test: _info _test-stan _test-unit
+
+.PHONY: _test-unit
+_test-unit: _test-unit-low-deps _test-unit-high-deps
 
 .PHONY: _test-stan
-_test-stan:
+_test-stan: _test-stan-low-deps _test-stan-high-deps
+
+.PHONY: _test-stan-high-deps
+_test-stan-high-deps: high-deps
+	vendor/bin/phpstan --memory-limit=512M analyse
+
+.PHONY: _test-stan-low-deps
+_test-stan-low-deps: low-deps
 	vendor/bin/phpstan --memory-limit=512M analyse
 
 .PHONY: _test-unit-high-deps

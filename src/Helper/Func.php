@@ -10,6 +10,9 @@ use Backbrain\Automapper\Contract\TypeConverterInterface;
 use Backbrain\Automapper\Contract\TypeFactoryInterface;
 use Backbrain\Automapper\Contract\ValueResolverInterface;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class Func
 {
     /**

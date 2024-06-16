@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Backbrain\Automapper\Contract\Attributes;
 
 use Backbrain\Automapper\Contract\NamingConventionInterface;
@@ -7,20 +9,17 @@ use Backbrain\Automapper\Contract\NamingConventionInterface;
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class NamingConvention
 {
-    /**
-     * @var NamingConventionInterface|class-string
-     */
-    private NamingConventionInterface|string $namingConvention;
+    private NamingConventionInterface $namingConvention;
 
     /**
-     * @param NamingConventionInterface|class-string $convention Instance or class name of the naming convention to use
+     * @param NamingConventionInterface $convention Instance of NamingConventionInterface
      */
-    public function __construct(NamingConventionInterface|string $convention)
+    public function __construct(NamingConventionInterface $convention)
     {
         $this->namingConvention = $convention;
     }
 
-    public function getNamingConvention(): NamingConventionInterface|string
+    public function getNamingConvention(): NamingConventionInterface
     {
         return $this->namingConvention;
     }
