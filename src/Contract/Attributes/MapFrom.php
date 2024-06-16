@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Backbrain\Automapper\Contract\Attributes;
 
 use Backbrain\Automapper\Contract\ValueResolverInterface;
+use Symfony\Component\ExpressionLanguage\Expression;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::IS_REPEATABLE)]
 class MapFrom
 {
     private string $source;
 
-    private ValueResolverInterface|string $mapFrom;
+    private Expression|ValueResolverInterface $valueResolverOrExpression;
 
     /**
      * Configure the mapping for a specific member.
@@ -17,10 +20,9 @@ class MapFrom
      * <code>
      * // using Symfony Expression Language
      * // see https://symfony.com/doc/current/reference/formats/expression_language.html
+     * use Symfony\Component\ExpressionLanguage\Expression;
      * class AccountDTO {
-     *     #[ForMember(ProfileDTO::class,
-     *          mapFrom: 'source.givenName~" "~source.givenName',
-     *     )]
+     *     #[MapFrom(ProfileDTO::class, 'source.givenName~" "~source.givenName')]
      *     public string $displayName;
      * }
      * </code>
@@ -28,13 +30,13 @@ class MapFrom
      * - `source`: the source object
      * - `context`: the current `Backbrain\Automapper\Contracts\ResolutionContextInterface`.
      *
-     * @param string                        $source  the source member type for which this member configuration is applied
-     * @param ValueResolverInterface|string $mapFrom it takes a ValueResolverInterface or a valid Symfony EL expression that will be used resolve the member value
+     * @param string                                   $source                    the source member type for which this member configuration is applied
+     * @param ValueResolverInterface|Expression|string $valueResolverOrExpression Can be an instance of ValueResolverInterface or a Symfony EL expression that will be used resolve the member value
      */
-    public function __construct(string $source, ValueResolverInterface|string $mapFrom)
+    public function __construct(string $source, string|Expression|ValueResolverInterface $valueResolverOrExpression)
     {
         $this->source = $source;
-        $this->mapFrom = $mapFrom;
+        $this->valueResolverOrExpression = is_string($valueResolverOrExpression) ? new Expression($valueResolverOrExpression) : $valueResolverOrExpression;
     }
 
     public function getSource(): string
@@ -42,8 +44,8 @@ class MapFrom
         return $this->source;
     }
 
-    public function getMapFrom(): ValueResolverInterface|string
+    public function getValueResolverOrExpression(): Expression|ValueResolverInterface
     {
-        return $this->mapFrom;
+        return $this->valueResolverOrExpression;
     }
 }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Helper;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class Type
 {
     public const INT = \Symfony\Component\PropertyInfo\Type::BUILTIN_TYPE_INT;

@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Backbrain\Automapper\Contract\Attributes;
+
+use Symfony\Component\ExpressionLanguage\Expression;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::IS_REPEATABLE)]
 class Condition
 {
     private string $source;
 
-    private string $condition;
+    private Expression $expression;
 
     /**
      * Configure the mapping for a specific member.
@@ -17,23 +21,22 @@ class Condition
      * // see https://symfony.com/doc/current/reference/formats/expression_language.html
      * class AccountDTO {
      *     #[ForMember(ProfileDTO::class,
-     *          mapFrom: 'source.givenName~" "~source.givenName',
      *          condition: 'source.publicProfile'
      *     )]
-     *     public string $displayName;
+     *     public string $email;
      * }
      * </code>
      * Within the expression you can use the following variables:
      * - `source`: the source object
      * - `context`: the current `Backbrain\Automapper\Contracts\ResolutionContextInterface`.
      *
-     * @param string $source    the source member type for which this member configuration is applied
-     * @param string $condition a Symfony EL expression that must evaluate to `true` to map the member
+     * @param string            $source     the source member type for which this member configuration is applied
+     * @param string|Expression $expression a Symfony EL expression that must evaluate to `true` to map the member
      */
-    public function __construct(string $source, string $condition)
+    public function __construct(string $source, string|Expression $expression)
     {
         $this->source = $source;
-        $this->condition = $condition;
+        $this->expression = is_string($expression) ? new Expression($expression) : $expression;
     }
 
     public function getSource(): string
@@ -41,8 +44,8 @@ class Condition
         return $this->source;
     }
 
-    public function getCondition(): string
+    public function getExpression(): Expression
     {
-        return $this->condition;
+        return $this->expression;
     }
 }

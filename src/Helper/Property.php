@@ -14,6 +14,9 @@ use Symfony\Component\PropertyInfo\PropertyInfoCacheExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class Property
 {
     public static function newPropertyInfoExtractor(?CacheItemPoolInterface $cacheItemPool = null): PropertyInfoExtractorInterface

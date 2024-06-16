@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Backbrain\Automapper\Helper;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 readonly class Value
 {
     public static function asInt(mixed $value): int

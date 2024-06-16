@@ -9,6 +9,9 @@ use Backbrain\Automapper\Contract\Builder\Map;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\ProfileInterface;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class DefaultConfig implements Config
 {
     /**

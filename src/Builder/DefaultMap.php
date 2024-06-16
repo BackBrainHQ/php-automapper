@@ -15,6 +15,9 @@ use Backbrain\Automapper\Contract\TypeFactoryInterface;
 use Backbrain\Automapper\Helper\Func;
 use Backbrain\Automapper\Model\Map;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class DefaultMap implements \Backbrain\Automapper\Contract\Builder\Map
 {
     private ?TypeConverterInterface $typeConverter = null;

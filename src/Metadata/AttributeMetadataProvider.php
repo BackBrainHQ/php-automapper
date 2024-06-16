@@ -1,16 +1,25 @@
 <?php
 
-namespace Backbrain\Automapper\Helper;
+declare(strict_types=1);
 
-class Attribute
+namespace Backbrain\Automapper\Metadata;
+
+use Backbrain\Automapper\Contract\Metadata\AttributeMetadataProviderInterface;
+
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
+class AttributeMetadataProvider implements AttributeMetadataProviderInterface
 {
     /**
      * @param class-string<object> $class
      * @param class-string[]       $filter
      *
      * @return object[]
+     *
+     * @throws \ReflectionException
      */
-    public static function getPropertyAttributes(string $class, string $property, array $filter = []): array
+    public function getPropertyAttributes(string $class, string $property, array $filter = []): array
     {
         $reflection = new \ReflectionProperty($class, $property);
 
@@ -37,7 +46,7 @@ class Attribute
      *
      * @return T|null
      */
-    public static function getClassAttr(string|\ReflectionClass $target, string $attrClassName): ?object
+    public function getClassAttr(string|\ReflectionClass $target, string $attrClassName): ?object
     {
         $attrs = self::getClassAttrs($target, $attrClassName);
         if (0 === count($attrs)) {
@@ -61,7 +70,7 @@ class Attribute
      *
      * @return array<T>
      */
-    public static function getClassAttrs(string|\ReflectionClass $target, string $attrClassName): array
+    public function getClassAttrs(string|\ReflectionClass $target, string $attrClassName): array
     {
         if (is_string($target)) {
             if (!class_exists($target)) {

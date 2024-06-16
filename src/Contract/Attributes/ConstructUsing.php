@@ -9,20 +9,17 @@ use Backbrain\Automapper\Contract\TypeFactoryInterface;
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class ConstructUsing
 {
-    /**
-     * @var TypeFactoryInterface|class-string<TypeFactoryInterface>
-     */
-    private TypeFactoryInterface|string $constructUsing;
+    private TypeFactoryInterface $constructUsing;
 
     /**
-     * @param TypeFactoryInterface|class-string<TypeFactoryInterface> $constructUsing Specifies a factory to use to create the destination object
+     * @param TypeFactoryInterface $constructUsing Specifies a factory to use to create the destination object
      */
-    public function __construct(TypeFactoryInterface|string $constructUsing)
+    public function __construct(TypeFactoryInterface $constructUsing)
     {
         $this->constructUsing = $constructUsing;
     }
 
-    public function getConstructUsing(): string|TypeFactoryInterface
+    public function getConstructUsing(): TypeFactoryInterface
     {
         return $this->constructUsing;
     }

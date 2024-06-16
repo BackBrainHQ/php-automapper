@@ -10,6 +10,9 @@ use Backbrain\Automapper\Contract\ValueResolverInterface;
 use Backbrain\Automapper\Helper\Func;
 use Backbrain\Automapper\Model\Member;
 
+/**
+ * @internal This class is not part of the public API and may change at any time!
+ */
 class DefaultOptionsBuilder implements Options
 {
     private string $destinationPropertyPath;
