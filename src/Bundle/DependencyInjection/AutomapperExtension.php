@@ -14,10 +14,12 @@ use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-class AutomapperExtension extends Extension implements ConfigurationInterface
+class AutomapperExtension extends ExtensionCompat implements ConfigurationInterface
 {
+    /**
+     * @param array<array<mixed>> $configs
+     */
     public function load(array $configs, ContainerBuilder $container): void
     {
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../config'));
