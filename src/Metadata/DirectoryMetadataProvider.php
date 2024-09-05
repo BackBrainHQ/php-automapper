@@ -42,7 +42,7 @@ class DirectoryMetadataProvider implements DirectoryMetadataProviderInterface
         foreach ($finder as $file) {
             $ast = $parser->parse($file->getContents());
 
-            $classNameVisitor = new class() extends NodeVisitorAbstract {
+            $classNameVisitor = new class extends NodeVisitorAbstract {
                 /**
                  * @var class-string[]
                  */

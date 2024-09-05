@@ -49,7 +49,7 @@ class DefaultMap implements \Backbrain\Automapper\Contract\Builder\Map
     public function __construct(
         private readonly Config $mapperConfigurationBuilder,
         private readonly string $sourceType,
-        private readonly string $destinationType
+        private readonly string $destinationType,
     ) {
     }
 

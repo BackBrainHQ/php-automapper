@@ -22,7 +22,7 @@ class Member implements MemberInterface
         private readonly ?ValueResolverInterface $valueProvider = null,
         private readonly bool $ignore = false,
         private readonly mixed $nullSubstitute = null,
-        ?callable $condition = null
+        ?callable $condition = null,
     ) {
         $this->conditionFn = $condition;
     }

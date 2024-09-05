@@ -25,7 +25,7 @@ class ProfileBuilderTest extends TestCase
         $profileBuilder = new DefaultConfig();
         $this->assertCount(0, $profileBuilder->getMaps());
 
-        $profileBuilder->addProfile(new class() extends Profile {
+        $profileBuilder->addProfile(new class extends Profile {
             public function __construct()
             {
                 $this->createMap('SourceClass', 'DestinationClass');

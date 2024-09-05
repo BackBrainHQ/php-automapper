@@ -9,7 +9,7 @@ class ArraySrc
     public function __construct(
         public array $srcArrayOfStrings = ['aString', 'bString', 'cString'],
         public array $srcArrayOfStringInt = [1, '2', 3],
-        public array $srcArrayOfScalarSrc = []
+        public array $srcArrayOfScalarSrc = [],
     ) {
     }
 }

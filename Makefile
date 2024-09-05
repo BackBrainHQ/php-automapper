@@ -9,6 +9,10 @@ _info:
 docs: _info
 	$(MAKE) -C ./docs/site build
 
+.PHONY: clean
+clean: _info
+	rm -rf vendor .phpunit.cache .php-cs-fixer.cache cobertura.xml composer.lock
+
 .PHONY: vendors
 vendors: _info
 	composer install
