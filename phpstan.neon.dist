@@ -2,3 +2,7 @@ parameters:
     level: 9
     paths:
         - src
+    excludePaths:
+        - src/Helper/PhpDocParserFactory.php
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

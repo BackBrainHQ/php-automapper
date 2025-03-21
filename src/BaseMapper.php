@@ -15,11 +15,6 @@ use Backbrain\Automapper\Helper\Func;
 use Backbrain\Automapper\Helper\Property;
 use Backbrain\Automapper\Model\Map;
 use Backbrain\Automapper\Model\Member;
-use PHPStan\PhpDocParser\Lexer\Lexer;
-use PHPStan\PhpDocParser\Parser\ConstExprParser;
-use PHPStan\PhpDocParser\Parser\PhpDocParser;
-use PHPStan\PhpDocParser\Parser\TokenIterator;
-use PHPStan\PhpDocParser\Parser\TypeParser;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
@@ -258,12 +253,8 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
             throw MapperException::newIllegalTypeException($type);
         }
 
-        $lexer = new Lexer();
-        $constExprParser = new ConstExprParser();
-        $typeParser = new TypeParser();
-        $phpDocParser = new PhpDocParser($typeParser, $constExprParser);
+        [$phpDocParser, $tokens] = Helper\PhpDocParserFactory::create($type);
 
-        $tokens = new TokenIterator($lexer->tokenize(sprintf('/** @return %s */', $type)));
         $phpDocNode = $phpDocParser->parse($tokens); // PhpDocNode
         $paramTags = $phpDocNode->getReturnTagValues();
 
