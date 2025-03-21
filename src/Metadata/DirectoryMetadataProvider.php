@@ -27,9 +27,15 @@ class DirectoryMetadataProvider implements DirectoryMetadataProviderInterface
     public function scanPath(string ...$path): array
     {
         $parserFactory = new ParserFactory();
-        $parser = method_exists($parserFactory, 'createForNewestSupportedVersion')
-            ? $parserFactory->createForNewestSupportedVersion()
-            : $parserFactory->create(ParserFactory::PREFER_PHP7); // @phpstan-ignore-line
+
+        // we have to use an if statement as conditional assignment does not work with 2 phpstan problems
+        // @phpstan-ignore-next-line
+        if (method_exists($parserFactory, 'createForNewestSupportedVersion')) {
+            $parser = $parserFactory->createForNewestSupportedVersion();
+        } else {
+            // @phpstan-ignore-next-line
+            $parser = $parserFactory->create(ParserFactory::PREFER_PHP7);
+        }
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
