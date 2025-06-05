@@ -24,6 +24,7 @@ use Symfony\Component\PropertyInfo\PhpStan\NameScope;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
 use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
+use Symfony\Component\TypeInfo\TypeContext\TypeContext;
 
 abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 {
@@ -264,7 +265,13 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 
         // This is a workaround for the missing public API in Symfony's PropertyInfo component
         // Mind future changes in Symfony's PropertyInfo component
-        return (new PhpStanTypeHelper())->getTypes($paramTags[0], new NameScope(\stdClass::class, '', []));
+        if (class_exists(NameScope::class)) {
+            // @phpstan-ignore-next-line
+            return (new PhpStanTypeHelper())->getTypes($paramTags[0], new NameScope(\stdClass::class, '', []));
+        }
+
+        // @phpstan-ignore-next-line
+        return (new PhpStanTypeHelper())->getTypes($paramTags[0], new TypeContext(\stdClass::class, \stdClass::class));
     }
 
     protected function canonicalize(string $type): string
