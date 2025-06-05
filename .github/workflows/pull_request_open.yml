@@ -71,6 +71,10 @@ jobs:
             vendors: 'high-deps'
           - php: '8.3'
             vendors: 'low-deps'
+          - php: '8.4'
+            vendors: 'high-deps'
+          - php: '8.4'
+            vendors: 'low-deps'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
