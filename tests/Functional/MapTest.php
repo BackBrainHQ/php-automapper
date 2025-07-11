@@ -30,7 +30,20 @@ class MapTest extends TestCase
         $autoMapper = new AutoMapper(new MapperConfiguration());
 
         $source = new ScalarSrc('John Doe', 30, 1.75);
-        $autoMapper->map($source, ScalarDest::class);
+
+        try {
+            $autoMapper->map($source, ScalarDest::class);
+            $this->fail('Expected MapperException was not thrown');
+        } catch (MapperException $e) {
+            // Check that the enhanced exception message contains key contextual information
+            $message = $e->getMessage();
+            $this->assertStringContainsString('ScalarSrc', $message, 'Exception should contain source class name');
+            $this->assertStringContainsString('ScalarDest', $message, 'Exception should contain destination class name');
+            $this->assertStringContainsString('source class:', $message, 'Exception should contain source class context');
+            $this->assertStringContainsString('destination class:', $message, 'Exception should contain destination class context');
+            $this->assertStringContainsString('mapping object', $message, 'Exception should contain operation context');
+            throw $e; // Re-throw for the expectException assertion
+        }
     }
 
     public function testDefaultMappingBehavior()
