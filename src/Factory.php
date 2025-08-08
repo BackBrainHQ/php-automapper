@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper;
 
+use Backbrain\Automapper\Context\ResolutionContextProvider;
 use Backbrain\Automapper\Contract\AutoMapperInterface;
 use Backbrain\Automapper\Contract\Builder\Config;
 use Backbrain\Automapper\Contract\Metadata\AttributeMetadataProviderInterface;
 use Backbrain\Automapper\Contract\Metadata\ClassMetadataProviderInterface;
 use Backbrain\Automapper\Contract\ProfileInterface;
+use Backbrain\Automapper\Contract\ResolutionContextProviderInterface;
 use Backbrain\Automapper\Helper\Property;
 use Backbrain\Automapper\Metadata\AttributeMetadataProvider;
 use Backbrain\Automapper\Metadata\ClassMetadataProvider;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -35,6 +38,8 @@ final class Factory implements LoggerAwareInterface
 
     private PropertyInfoExtractorInterface $propertyInfo;
 
+    private ResolutionContextProviderInterface $resolutionContextProvider;
+
     /**
      * @var class-string[]
      */
@@ -52,9 +57,12 @@ final class Factory implements LoggerAwareInterface
         ?PropertyInfoExtractorInterface $propertyInfo = null,
         ?ClassMetadataProviderInterface $classMetadataProvider = null,
         ?AttributeMetadataProviderInterface $attributeMetadataProvider = null,
+        ?ResolutionContextProviderInterface $resolutionContextProvider = null,
+        ?ContainerInterface $container = null,
     ) {
         $this->logger = $logger ?? new NullLogger();
         $this->cacheItemPool = $cacheItemPool ?? new ArrayAdapter();
+        $this->resolutionContextProvider = $resolutionContextProvider ?? new ResolutionContextProvider();
         $this->expressionLanguage = $expressionLanguage ?? new ExpressionLanguage($this->cacheItemPool);
         $this->propertyInfo = $propertyInfo ?? Property::newPropertyInfoExtractor($this->cacheItemPool);
         $this->attributeMetadataProvider = $attributeMetadataProvider ?? new AttributeMetadataProvider();
@@ -64,6 +72,7 @@ final class Factory implements LoggerAwareInterface
             expressionLanguage: $this->expressionLanguage,
             propertyInfo: $this->propertyInfo,
             attributeMetadataProvider: $this->attributeMetadataProvider,
+            container: $container,
         );
     }
 
@@ -81,7 +90,12 @@ final class Factory implements LoggerAwareInterface
             }
         });
 
-        return new AutoMapper($mapperConfig, $this->cacheItemPool, $this->logger);
+        return new AutoMapper(
+            mapperConfiguration: $mapperConfig,
+            cacheItemPool: $this->cacheItemPool,
+            logger: $this->logger,
+            resolutionContextProvider: $this->resolutionContextProvider,
+        );
     }
 
     public function addProfile(ProfileInterface $profile): void

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper;
 
-use Backbrain\Automapper\Context\ResolutionContext;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\MemberInterface;
+use Backbrain\Automapper\Contract\ResolutionContextInterface;
 use Backbrain\Automapper\Exceptions\MapperException;
 use Symfony\Component\PropertyInfo\Type;
 
@@ -64,7 +64,11 @@ class AutoMapper extends BaseMapper
         }
 
         if ($map->getBeforeMap()) {
-            $map->getBeforeMap()->process($srcValue, $destValue, $this->newResolutionContext(map: $map, source: $srcValue));
+            $map->getBeforeMap()->process(
+                $srcValue,
+                $destValue,
+                $this->newResolutionContext(map: $map, source: $srcValue)
+            );
         }
 
         foreach ($this->membersFor($map) as $member) {
@@ -79,7 +83,10 @@ class AutoMapper extends BaseMapper
                 continue;
             }
 
-            if (null !== $member->getCondition() && !$member->getCondition()($srcValue, $this->newResolutionContext(map: $map, source: $srcValue))) {
+            if (null !== $member->getCondition() && !$member->getCondition()(
+                $srcValue,
+                $this->newResolutionContext(map: $map, source: $srcValue)
+            )) {
                 $this->logger->debug('Member condition returned false.', [
                     'source' => $srcValue,
                     'destination' => $destValue,
@@ -93,7 +100,11 @@ class AutoMapper extends BaseMapper
         }
 
         if ($map->getAfterMap()) {
-            $map->getAfterMap()->process($srcValue, $destValue, $this->newResolutionContext(map: $map, source: $srcValue));
+            $map->getAfterMap()->process(
+                $srcValue,
+                $destValue,
+                $this->newResolutionContext(map: $map, source: $srcValue)
+            );
         }
     }
 
@@ -125,7 +136,8 @@ class AutoMapper extends BaseMapper
     private function handleMapping(Type $destPropertyInfoType, mixed $value): array
     {
         $srcType = Helper\Type::toString($value);
-        if ((null === $value && $destPropertyInfoType->isNullable()) || 'mixed' === $destPropertyInfoType->getBuiltinType()) {
+        if ((null === $value && $destPropertyInfoType->isNullable(
+        )) || 'mixed' === $destPropertyInfoType->getBuiltinType()) {
             return [$value, true];
         }
 
@@ -185,7 +197,10 @@ class AutoMapper extends BaseMapper
             return;
         }
 
-        $destPropertyInfoTypes = $this->propertyInfoExtractor->getTypes(get_class($dest), $member->getDestinationProperty()) ?? [];
+        $destPropertyInfoTypes = $this->propertyInfoExtractor->getTypes(
+            get_class($dest),
+            $member->getDestinationProperty()
+        ) ?? [];
 
         $failedTypes = [];
         foreach ($destPropertyInfoTypes as $destPropertyInfoType) {
@@ -219,7 +234,11 @@ class AutoMapper extends BaseMapper
             return [$valueProvider->resolve($source, $this->newResolutionContext($map, $member, $source)), true];
         }
 
-        $propertyName = $this->translatePropertyName($map, $member->getDestinationProperty(), $map->getSourceMemberNamingConvention());
+        $propertyName = $this->translatePropertyName(
+            $map,
+            $member->getDestinationProperty(),
+            $map->getSourceMemberNamingConvention()
+        );
 
         [$value, $ok] = $this->propertyRead($source, $propertyName);
         if (!$ok) {
@@ -295,9 +314,12 @@ class AutoMapper extends BaseMapper
         return $this->createA($destType);
     }
 
-    private function newResolutionContext(?MapInterface $map = null, ?MemberInterface $member = null, mixed $source = null): ResolutionContext
-    {
-        return new ResolutionContext(
+    private function newResolutionContext(
+        ?MapInterface $map = null,
+        ?MemberInterface $member = null,
+        mixed $source = null,
+    ): ResolutionContextInterface {
+        return $this->resolutionContextProvider->get(
             autoMapper: $this,
             map: $map,
             member: $member,
