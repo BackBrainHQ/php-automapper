@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper;
 
+use Backbrain\Automapper\Context\ResolutionContextProvider;
 use Backbrain\Automapper\Contract\AutoMapperInterface;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\MapperConfigurationInterface;
 use Backbrain\Automapper\Contract\MemberInterface;
 use Backbrain\Automapper\Contract\NamingConventionInterface;
 use Backbrain\Automapper\Contract\ResolutionContextInterface;
+use Backbrain\Automapper\Contract\ResolutionContextProviderInterface;
 use Backbrain\Automapper\Exceptions\MapperException;
 use Backbrain\Automapper\Helper\Func;
 use Backbrain\Automapper\Helper\Property;
 use Backbrain\Automapper\Model\Map;
 use Backbrain\Automapper\Model\Member;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -34,6 +37,10 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 
     protected PropertyInfoExtractorInterface $propertyInfoExtractor;
 
+    protected ResolutionContextProviderInterface $resolutionContextProvider;
+
+    protected ?ContainerInterface $container = null;
+
     /**
      * @var array<string, array<string, Map>>
      */
@@ -42,11 +49,15 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
     public function __construct(
         MapperConfigurationInterface $mapperConfiguration,
         ?CacheItemPoolInterface $cacheItemPool = null,
-        ?LoggerInterface $logger = null)
-    {
+        ?LoggerInterface $logger = null,
+        ?ResolutionContextProviderInterface $resolutionContextProvider = null,
+        ?ContainerInterface $container = null,
+    ) {
         $this->logger = $logger ?? new NullLogger();
+        $this->container = $container;
         $this->propertyAccessor = Property::newPropertyAccessor($cacheItemPool);
         $this->propertyInfoExtractor = Property::newPropertyInfoExtractor($cacheItemPool);
+        $this->resolutionContextProvider = $resolutionContextProvider ?? new ResolutionContextProvider();
 
         $this->applyMaps($mapperConfiguration->getMaps());
     }
@@ -65,10 +76,16 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 
             $defaultTypeFactory = $map->getTypeFactory();
             if ($this->canInstantiate($map->getDestinationType())) {
-                $defaultTypeFactory = Func::typeFactoryFromFn($defaultTypeFactory ?? fn (mixed $source, ResolutionContextInterface $context) => $this->createA($map->getDestinationType()));
+                $defaultTypeFactory = Func::typeFactoryFromFn(
+                    $defaultTypeFactory ?? fn (mixed $source, ResolutionContextInterface $context) => $this->createA(
+                        $map->getDestinationType()
+                    )
+                );
             }
 
-            $this->maps[$this->canonicalize($map->getSourceType())][$this->canonicalize($map->getDestinationType())] = Map::from($map)
+            $this->maps[$this->canonicalize($map->getSourceType())][$this->canonicalize(
+                $map->getDestinationType()
+            )] = Map::from($map)
                 ->withTypeFactory($defaultTypeFactory);
         }
 
@@ -116,11 +133,14 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 
         $baseMap = $map->getIncludeBaseMap();
         if (null !== $baseMap) {
-            $baseMap = $this->resolveMap($this->mustGetMap($maps, $baseMap->getSourceType(), $baseMap->getDestinationType()), $maps, $stack);
+            $baseMap = $this->resolveMap(
+                $this->mustGetMap($maps, $baseMap->getSourceType(), $baseMap->getDestinationType()),
+                $maps,
+                $stack
+            );
             $result = Map::mergeMembers($result, $baseMap)
                 ->withDestinationType($map->getDestinationType())
-                ->withSourceType($map->getSourceType())
-            ;
+                ->withSourceType($map->getSourceType());
         }
 
         return $result;
@@ -168,7 +188,11 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
         $properties = $this->propertyInfoExtractor->getProperties($map->getDestinationType()) ?? [];
 
         foreach ($properties as $propertyName) {
-            $destPropertyName = $this->translatePropertyName($map, $propertyName, $map->getDestinationMemberNamingConvention());
+            $destPropertyName = $this->translatePropertyName(
+                $map,
+                $propertyName,
+                $map->getDestinationMemberNamingConvention()
+            );
 
             $members[$destPropertyName] = $this->memberFor($map, $destPropertyName);
         }
@@ -192,9 +216,13 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
         return new Member($propertyName);
     }
 
-    protected function translatePropertyName(MapInterface $map, string $propertyName, ?NamingConventionInterface $namingConvention = null): string
-    {
-        if (null === $namingConvention || $map->getSourceMemberNamingConvention() === $map->getDestinationMemberNamingConvention()) {
+    protected function translatePropertyName(
+        MapInterface $map,
+        string $propertyName,
+        ?NamingConventionInterface $namingConvention = null,
+    ): string {
+        if (null === $namingConvention || $map->getSourceMemberNamingConvention(
+        ) === $map->getDestinationMemberNamingConvention()) {
             return $propertyName;
         }
 
@@ -286,7 +314,11 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 
     protected function isType(mixed $value, string $expectedType): bool
     {
-        return Helper\Type::toString($value) === $expectedType || ((is_object($value) || is_string($value)) && is_a($value, $expectedType, true));
+        return Helper\Type::toString($value) === $expectedType || ((is_object($value) || is_string($value)) && is_a(
+            $value,
+            $expectedType,
+            true
+        ));
     }
 
     protected function assertType(mixed $value, string $expectedType): void

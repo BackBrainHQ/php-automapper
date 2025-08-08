@@ -12,20 +12,33 @@ class MapTo
 {
     private string $dest;
 
-    private ?MappingActionInterface $beforeMap;
-
-    private ?MappingActionInterface $afterMap;
-
-    private ?TypeConverterInterface $convertUsing;
+    /**
+     * @var MappingActionInterface|class-string|null
+     */
+    private MappingActionInterface|string|null $beforeMap;
 
     /**
-     * @param string                      $dest         The destination type name
-     * @param TypeConverterInterface|null $convertUsing Specifies a converter to use to convert the source object
-     * @param MappingActionInterface|null $beforeMap    Run this action before mapping
-     * @param MappingActionInterface|null $afterMap     Run this action after mapping
+     * @var MappingActionInterface|class-string|null
      */
-    public function __construct(string $dest, ?TypeConverterInterface $convertUsing = null, ?MappingActionInterface $beforeMap = null, ?MappingActionInterface $afterMap = null)
-    {
+    private MappingActionInterface|string|null $afterMap;
+
+    /**
+     * @var TypeConverterInterface|class-string|null
+     */
+    private TypeConverterInterface|string|null $convertUsing;
+
+    /**
+     * @param string                                   $dest         The destination type name
+     * @param TypeConverterInterface|class-string|null $convertUsing Specifies a converter to use to convert the source object
+     * @param MappingActionInterface|class-string|null $beforeMap    Run this action before mapping
+     * @param MappingActionInterface|class-string|null $afterMap     Run this action after mapping
+     */
+    public function __construct(
+        string $dest,
+        TypeConverterInterface|string|null $convertUsing = null,
+        MappingActionInterface|string|null $beforeMap = null,
+        MappingActionInterface|string|null $afterMap = null,
+    ) {
         $this->dest = $dest;
         $this->convertUsing = $convertUsing;
         $this->beforeMap = $beforeMap;
@@ -37,17 +50,17 @@ class MapTo
         return $this->dest;
     }
 
-    public function getBeforeMap(): ?MappingActionInterface
+    public function getBeforeMap(): MappingActionInterface|string|null
     {
         return $this->beforeMap;
     }
 
-    public function getAfterMap(): ?MappingActionInterface
+    public function getAfterMap(): MappingActionInterface|string|null
     {
         return $this->afterMap;
     }
 
-    public function getConvertUsing(): ?TypeConverterInterface
+    public function getConvertUsing(): TypeConverterInterface|string|null
     {
         return $this->convertUsing;
     }

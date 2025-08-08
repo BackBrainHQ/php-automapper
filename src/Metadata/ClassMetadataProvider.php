@@ -13,14 +13,17 @@ use Backbrain\Automapper\Contract\Attributes\NamingConvention;
 use Backbrain\Automapper\Contract\Attributes\NullSubstitute;
 use Backbrain\Automapper\Contract\Builder\Map;
 use Backbrain\Automapper\Contract\Builder\Options;
+use Backbrain\Automapper\Contract\MappingActionInterface;
 use Backbrain\Automapper\Contract\Metadata\AttributeMetadataProviderInterface;
 use Backbrain\Automapper\Contract\Metadata\ClassMetadataProviderInterface;
 use Backbrain\Automapper\Contract\ProfileInterface;
 use Backbrain\Automapper\Contract\ResolutionContextInterface;
+use Backbrain\Automapper\Contract\TypeConverterInterface;
 use Backbrain\Automapper\Contract\ValueResolverInterface;
 use Backbrain\Automapper\Helper\Property;
 use Backbrain\Automapper\Profiles\AnonymousProfile;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -29,6 +32,7 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
+use Webmozart\Assert\Assert;
 
 /**
  * @internal This class is not part of the public API and may change at any time!
@@ -45,18 +49,22 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
 
     private AttributeMetadataProviderInterface $attributeMetadataProvider;
 
+    private ?ContainerInterface $container;
+
     public function __construct(
         ?LoggerInterface $logger = null,
         ?CacheItemPoolInterface $cacheItemPool = null,
         ?ExpressionLanguage $expressionLanguage = null,
         ?PropertyInfoExtractorInterface $propertyInfo = null,
         ?AttributeMetadataProviderInterface $attributeMetadataProvider = null,
+        ?ContainerInterface $container = null,
     ) {
         $this->logger = $logger ?? new NullLogger();
         $this->cacheItemPool = $cacheItemPool ?? new ArrayAdapter();
         $this->expressionLanguage = $expressionLanguage ?? new ExpressionLanguage($this->cacheItemPool);
         $this->propertyInfo = $propertyInfo ?? Property::newPropertyInfoExtractor($this->cacheItemPool);
         $this->attributeMetadataProvider = $attributeMetadataProvider ?? new AttributeMetadataProvider();
+        $this->container = $container;
     }
 
     /**
@@ -75,7 +83,10 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
         $profiles = [];
 
         $mapAttrs = $this->attributeMetadataProvider->getClassAttrs($sourceReflectionClass, MapTo::class);
-        $sourceNamingConventionAttr = $this->attributeMetadataProvider->getClassAttr($sourceReflectionClass, NamingConvention::class);
+        $sourceNamingConventionAttr = $this->attributeMetadataProvider->getClassAttr(
+            $sourceReflectionClass,
+            NamingConvention::class
+        );
 
         foreach ($mapAttrs as $mapAttr) {
             $profile = $this->handleMapTo($mapAttr, $className, $sourceNamingConventionAttr);
@@ -86,8 +97,11 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
         return $profiles;
     }
 
-    private function handleMapTo(MapTo $sourceMapAttr, string $sourceClassName, ?NamingConvention $sourceNamingConventionAttr): ProfileInterface
-    {
+    private function handleMapTo(
+        MapTo $sourceMapAttr,
+        string $sourceClassName,
+        ?NamingConvention $sourceNamingConventionAttr,
+    ): ProfileInterface {
         $destClassName = $sourceMapAttr->getDest();
         if (!class_exists($sourceClassName)) {
             throw new \InvalidArgumentException(sprintf('Source class %s does not exist', $sourceClassName));
@@ -144,6 +158,26 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
         }
 
         return function (Map $map) use ($beforeMap) {
+            if (is_string($beforeMap)) {
+                if ($this->container && $this->container->has($beforeMap)) {
+                    $beforeMap = $this->container->get($beforeMap);
+                } elseif (class_exists($beforeMap)) {
+                    $beforeMap = new $beforeMap();
+                } else {
+                    throw new \InvalidArgumentException(sprintf('BeforeMap class "%s" does not exist', $beforeMap));
+                }
+            }
+
+            Assert::isInstanceOf(
+                $beforeMap,
+                MappingActionInterface::class,
+                sprintf(
+                    'BeforeMap must be an instance of %s, got %s',
+                    MappingActionInterface::class,
+                    get_debug_type($beforeMap)
+                )
+            );
+
             $map->beforeMap($beforeMap);
         };
     }
@@ -156,6 +190,26 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
         }
 
         return function (Map $map) use ($afterMap) {
+            if (is_string($afterMap)) {
+                if ($this->container && $this->container->has($afterMap)) {
+                    $afterMap = $this->container->get($afterMap);
+                } elseif (class_exists($afterMap)) {
+                    $afterMap = new $afterMap();
+                } else {
+                    throw new \InvalidArgumentException(sprintf('AfterMap class "%s" does not exist', $afterMap));
+                }
+            }
+
+            Assert::isInstanceOf(
+                $afterMap,
+                MappingActionInterface::class,
+                sprintf(
+                    'AfterMap must be an instance of %s, got %s',
+                    MappingActionInterface::class,
+                    get_debug_type($afterMap)
+                )
+            );
+
             $map->afterMap($afterMap);
         };
     }
@@ -179,6 +233,26 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
         }
 
         return function (Map $map) use ($convertUsing) {
+            if (is_string($convertUsing)) {
+                if ($this->container && $this->container->has($convertUsing)) {
+                    $convertUsing = $this->container->get($convertUsing);
+                } elseif (class_exists($convertUsing)) {
+                    $convertUsing = new $convertUsing();
+                } else {
+                    throw new \InvalidArgumentException(sprintf('ConvertUsing class "%s" does not exist', $convertUsing));
+                }
+            }
+
+            Assert::isInstanceOf(
+                $convertUsing,
+                TypeConverterInterface::class,
+                sprintf(
+                    'ConvertUsing must be an instance of %s, got %s',
+                    TypeConverterInterface::class,
+                    get_debug_type($convertUsing)
+                )
+            );
+
             $map->convertUsing($convertUsing);
         };
     }
@@ -188,7 +262,10 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
      */
     private function fnDestNamingConvention(\ReflectionClass $destReflectionClass): \Closure
     {
-        $destNamingConventionAttr = $this->attributeMetadataProvider->getClassAttr($destReflectionClass, NamingConvention::class);
+        $destNamingConventionAttr = $this->attributeMetadataProvider->getClassAttr(
+            $destReflectionClass,
+            NamingConvention::class
+        );
         if (!$destNamingConventionAttr) {
             return $this->fnNoop();
         }
@@ -203,7 +280,10 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
      */
     private function fnConstructUsing(\ReflectionClass $destReflectionClass): \Closure
     {
-        $constructUsingAttr = $this->attributeMetadataProvider->getClassAttr($destReflectionClass, ConstructUsing::class);
+        $constructUsingAttr = $this->attributeMetadataProvider->getClassAttr(
+            $destReflectionClass,
+            ConstructUsing::class
+        );
         if (!$constructUsingAttr) {
             return $this->fnNoop();
         }
@@ -221,38 +301,51 @@ class ClassMetadataProvider implements ClassMetadataProviderInterface, LoggerAwa
         $expressionLanguage = $this->expressionLanguage;
 
         return function (Map $map) use ($property, $attributes, $sourceClassName, $expressionLanguage) {
-            $map->forMember($property, function (Options $options) use ($attributes, $expressionLanguage, $sourceClassName) {
-                foreach ($attributes as $attribute) {
-                    if ($attribute instanceof Ignore) {
-                        $options->ignore();
-                    }
-
-                    if ($attribute instanceof Condition && $attribute->getSource() === $sourceClassName) {
-                        $options->condition(fn (object $source, ResolutionContextInterface $context) => $expressionLanguage->evaluate($attribute->getExpression(), [
-                            'source' => $source,
-                            'context' => $context,
-                        ]));
-                    }
-
-                    if ($attribute instanceof NullSubstitute) {
-                        $options->nullSubstitute($attribute->getNullSubstitute());
-                    }
-
-                    if ($attribute instanceof MapFrom && $attribute->getSource() === $sourceClassName) {
-                        $valueResolverOrExpression = $attribute->getValueResolverOrExpression();
-                        if ($valueResolverOrExpression instanceof ValueResolverInterface) {
-                            $options->mapFrom($valueResolverOrExpression);
+            $map->forMember(
+                $property,
+                function (Options $options) use ($attributes, $expressionLanguage, $sourceClassName) {
+                    foreach ($attributes as $attribute) {
+                        if ($attribute instanceof Ignore) {
+                            $options->ignore();
                         }
 
-                        if ($valueResolverOrExpression instanceof Expression) {
-                            $options->mapFrom(fn (object $source, ResolutionContextInterface $context) => $expressionLanguage->evaluate($valueResolverOrExpression, [
-                                'source' => $source,
-                                'context' => $context,
-                            ]));
+                        if ($attribute instanceof Condition && $attribute->getSource() === $sourceClassName) {
+                            $options->condition(
+                                fn (
+                                    object $source,
+                                    ResolutionContextInterface $context,
+                                ) => $expressionLanguage->evaluate($attribute->getExpression(), [
+                                    'source' => $source,
+                                    'context' => $context,
+                                ])
+                            );
+                        }
+
+                        if ($attribute instanceof NullSubstitute) {
+                            $options->nullSubstitute($attribute->getNullSubstitute());
+                        }
+
+                        if ($attribute instanceof MapFrom && $attribute->getSource() === $sourceClassName) {
+                            $valueResolverOrExpression = $attribute->getValueResolverOrExpression();
+                            if ($valueResolverOrExpression instanceof ValueResolverInterface) {
+                                $options->mapFrom($valueResolverOrExpression);
+                            }
+
+                            if ($valueResolverOrExpression instanceof Expression) {
+                                $options->mapFrom(
+                                    fn (
+                                        object $source,
+                                        ResolutionContextInterface $context,
+                                    ) => $expressionLanguage->evaluate($valueResolverOrExpression, [
+                                        'source' => $source,
+                                        'context' => $context,
+                                    ])
+                                );
+                            }
                         }
                     }
                 }
-            });
+            );
         };
     }
 
