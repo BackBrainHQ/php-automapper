@@ -55,6 +55,54 @@ class MapperException extends \LogicException
         return new self(sprintf('No mapping found for source type "%s" to destination type "%s"', $srcType, implode('", "', $destTypes)), self::MISSING_MAP);
     }
 
+    public static function newMissingMapExceptionWithContext(string $sourceType, string $destinationType, ?string $sourceClass = null, ?string $destinationClass = null, ?string $context = null): self
+    {
+        $message = sprintf('No mapping found for source type "%s" and destination type "%s"', $sourceType, $destinationType);
+
+        if ($sourceClass || $destinationClass) {
+            $classInfo = [];
+            if ($sourceClass) {
+                $classInfo[] = sprintf('source class: %s', $sourceClass);
+            }
+            if ($destinationClass) {
+                $classInfo[] = sprintf('destination class: %s', $destinationClass);
+            }
+            $message .= sprintf(' (%s)', implode(', ', $classInfo));
+        }
+
+        if ($context) {
+            $message .= sprintf(' Context: %s', $context);
+        }
+
+        return new self($message, self::MISSING_MAP);
+    }
+
+    /**
+     * @param string[] $destTypes
+     */
+    public static function newMissingMapsExceptionWithContext(string $srcType, array $destTypes, ?string $destinationClass = null, ?string $property = null): self
+    {
+        if (count($destTypes) > 1) {
+            $message = sprintf('No mapping found for source type "%s" to any of the destination types "%s"', $srcType, implode('", "', $destTypes));
+        } else {
+            $message = sprintf('No mapping found for source type "%s" to destination type "%s"', $srcType, implode('", "', $destTypes));
+        }
+
+        $contextParts = [];
+        if ($destinationClass) {
+            $contextParts[] = sprintf('destination class: %s', $destinationClass);
+        }
+        if ($property) {
+            $contextParts[] = sprintf('property: %s', $property);
+        }
+
+        if (!empty($contextParts)) {
+            $message .= sprintf(' (%s)', implode(', ', $contextParts));
+        }
+
+        return new self($message, self::MISSING_MAP);
+    }
+
     public static function newDestinationClassNotFoundException(string $destinationType): self
     {
         return new self(sprintf('Class for destination type "%s" does not exist', $destinationType), self::CLASS_NOT_FOUND);

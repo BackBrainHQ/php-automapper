@@ -17,7 +17,16 @@ class AutoMapper extends BaseMapper
         $sourceType = get_class($source);
         $sourceValue = $source;
 
-        $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
+        try {
+            $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
+        } catch (MapperException $e) {
+            if (MapperException::MISSING_MAP === $e->getCode()) {
+                throw MapperException::newMissingMapExceptionWithContext($this->canonicalize($sourceType), $this->canonicalize($destinationType), $sourceType, $destinationType, 'mapping object');
+            }
+
+            throw $e;
+        }
+
         $destinationValue = $this->newInstanceOf($map, $sourceValue, $destinationType);
         if (!$destinationValue instanceof $destinationType) {
             throw MapperException::newUnexpectedTypeException($destinationType, $destinationValue);
@@ -51,7 +60,16 @@ class AutoMapper extends BaseMapper
 
         $destinationType = get_class($destination);
 
-        $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
+        try {
+            $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
+        } catch (MapperException $e) {
+            if (MapperException::MISSING_MAP === $e->getCode()) {
+                throw MapperException::newMissingMapExceptionWithContext($this->canonicalize($sourceType), $this->canonicalize($destinationType), $sourceType, $destinationType, 'mutating object');
+            }
+
+            throw $e;
+        }
+
         $destinationValue = $destination;
 
         $this->mapType($map, $sourceValue, $destinationValue);
@@ -127,7 +145,7 @@ class AutoMapper extends BaseMapper
             $failedTypes[] = Helper\Type::toString($type);
         }
 
-        throw MapperException::newMissingMapsException(Helper\Type::toString($value), ...$failedTypes);
+        throw MapperException::newMissingMapsExceptionWithContext(Helper\Type::toString($value), $failedTypes, null, 'collection mapping');
     }
 
     /**
@@ -221,7 +239,7 @@ class AutoMapper extends BaseMapper
             return;
         }
 
-        throw MapperException::newMissingMapsException(Helper\Type::toString($value), ...$failedTypes);
+        throw MapperException::newMissingMapsExceptionWithContext(Helper\Type::toString($value), $failedTypes, get_class($dest), $member->getDestinationProperty());
     }
 
     /**

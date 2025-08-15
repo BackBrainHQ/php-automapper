@@ -31,11 +31,11 @@ lint: _info _lint-php
 
 .PHONY: _lint-php
 _lint-php:
-	php vendor/bin/php-cs-fixer fix --dry-run --diff
+	PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --dry-run --diff
 
 .PHONY: lint-fix
 lint-fix: _info
-	php vendor/bin/php-cs-fixer fix --diff
+	PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --diff
 
 .PHONY: test
 test: _info _test-stan _test-unit
