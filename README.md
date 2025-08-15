@@ -50,7 +50,7 @@ how to use PHP AutoMapper effectively. Where PHP AutoMapper diverges or extends 
 ## Usage Example 
 
 Here's a simple example of how to use PHP AutoMapper to map data between two objects.
-For more examples and detailed usage instructions, please refer to the [examples](docs/examples) directory.
+For more examples and detailed usage instructions, please refer to the [examples](docs/example) directory.
 
 ```php
 <?php
@@ -119,7 +119,7 @@ The dump shows the new ProfileDTO with the mapped properties:
 }
 ```
 
-For more examples and detailed usage instructions, please refer to the [examples](docs/examples) directory.
+For more examples and detailed usage instructions, please refer to the [examples](docs/example) directory.
 
 ## Contributing
 
