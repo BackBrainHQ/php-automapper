@@ -4,60 +4,102 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper;
 
+use Backbrain\Automapper\Context\MappingContext;
 use Backbrain\Automapper\Contract\MapInterface;
 use Backbrain\Automapper\Contract\MemberInterface;
 use Backbrain\Automapper\Contract\ResolutionContextInterface;
+use Backbrain\Automapper\Exceptions\ContextAwareMapperException;
 use Backbrain\Automapper\Exceptions\MapperException;
 use Symfony\Component\PropertyInfo\Type;
 
 class AutoMapper extends BaseMapper
 {
+    /**
+     * Maps a source object to a destination type.
+     *
+     * @template T of object
+     *
+     * @param class-string<T> $destinationType
+     *
+     * @return T
+     */
     public function map(object $source, string $destinationType): object
     {
-        $sourceType = get_class($source);
-        $sourceValue = $source;
+        $ctx = MappingContext::root($source, $destinationType);
 
-        $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
-        $destinationValue = $this->newInstanceOf($map, $sourceValue, $destinationType);
-        if (!$destinationValue instanceof $destinationType) {
-            throw MapperException::newUnexpectedTypeException($destinationType, $destinationValue);
+        return $this->doMap($source, $destinationType, $ctx);
+    }
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T> $destinationType
+     *
+     * @return T
+     */
+    private function doMap(object $source, string $destinationType, MappingContext $ctx): object
+    {
+        try {
+            $sourceType = get_class($source);
+            $sourceValue = $source;
+
+            $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
+            $ctx = $ctx->withAppliedMap($map);
+            $destinationValue = $this->newInstanceOf($map, $sourceValue, $destinationType, $ctx);
+            if (!$destinationValue instanceof $destinationType) {
+                throw MapperException::newUnexpectedTypeException($destinationType, $destinationValue, $ctx);
+            }
+
+            $this->mapType($map, $sourceValue, $destinationValue, $ctx);
+
+            return $destinationValue;
+        } catch (MapperException $e) {
+            throw $this->rethrowWithContext($e, $ctx);
         }
-
-        $this->mapType($map, $sourceValue, $destinationValue);
-
-        return $destinationValue;
     }
 
     public function mapIterable(iterable $source, string $destinationType): iterable
     {
-        foreach ($this->parseTypeExpr($destinationType) as $dType) {
-            [$value, $ok] = $this->handleMapping($dType, $source);
-            if ($ok) {
-                if (!is_iterable($value)) {
-                    throw new \LogicException('Type is not a collection');
+        $ctx = MappingContext::root($source, $destinationType);
+        try {
+            foreach ($this->parseTypeExpr($destinationType) as $dType) {
+                $destTypeStr = Helper\Type::toString($dType);
+                $ctxLoop = $ctx->withDestTypes([$destTypeStr]);
+                [$value, $ok] = $this->handleMapping($dType, $source, $ctxLoop);
+                if ($ok) {
+                    if (!is_iterable($value)) {
+                        throw new \LogicException('Type is not a collection');
+                    }
+
+                    return $value;
                 }
-
-                return $value;
             }
-        }
 
-        throw MapperException::newIllegalTypeException($destinationType);
+            throw MapperException::newIllegalTypeException($destinationType, $ctx);
+        } catch (MapperException $e) {
+            throw $this->rethrowWithContext($e, $ctx);
+        }
     }
 
     public function mutate(object $source, object $destination): void
     {
-        $sourceType = get_class($source);
-        $sourceValue = $source;
-
         $destinationType = get_class($destination);
+        $ctx = MappingContext::root($source, $destinationType);
+        try {
+            $sourceType = get_class($source);
+            $sourceValue = $source;
 
-        $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
-        $destinationValue = $destination;
+            $map = $this->mustGetMap($this->maps, $sourceType, $destinationType);
+            $ctx = $ctx->withAppliedMap($map);
+            $destinationValue = $destination;
 
-        $this->mapType($map, $sourceValue, $destinationValue);
+            $this->mapType($map, $sourceValue, $destinationValue, $ctx);
+        } catch (MapperException $e) {
+            throw $this->rethrowWithContext($e, $ctx);
+        }
     }
 
-    private function mapType(MapInterface $map, mixed $srcValue, mixed $destValue): void
+    private function mapType(MapInterface $map, mixed $srcValue, mixed $destValue, MappingContext $ctx): void
     {
         if (!is_object($srcValue) || !is_object($destValue)) {
             throw new \LogicException('Not implemented');
@@ -72,7 +114,7 @@ class AutoMapper extends BaseMapper
         }
 
         foreach ($this->membersFor($map) as $member) {
-            [$sourcePropertyValue, $ok] = $this->memberSourceValueFor($map, $member, $srcValue);
+            [$sourcePropertyValue, $ok] = $this->memberSourceValueFor($map, $member, $srcValue, $ctx);
             if (!$ok) {
                 $this->logger->warning('Cannot access source property.', [
                     'source' => $srcValue,
@@ -96,7 +138,7 @@ class AutoMapper extends BaseMapper
                 continue;
             }
 
-            $this->memberDestinationValuePut($member, $destValue, $sourcePropertyValue);
+            $this->memberDestinationValuePut($member, $destValue, $sourcePropertyValue, $ctx);
         }
 
         if ($map->getAfterMap()) {
@@ -111,7 +153,7 @@ class AutoMapper extends BaseMapper
     /**
      * @param Type[] $types
      */
-    private function handleValue(mixed $value, array $types): mixed
+    private function handleValue(mixed $value, array $types, MappingContext $ctx): mixed
     {
         if (count($types) < 1) {
             return $value;
@@ -119,7 +161,7 @@ class AutoMapper extends BaseMapper
 
         $failedTypes = [];
         foreach ($types as $type) {
-            [$targetValue, $ok] = $this->handleMapping($type, $value);
+            [$targetValue, $ok] = $this->handleMapping($type, $value, $ctx);
             if ($ok) {
                 return $targetValue;
             }
@@ -127,13 +169,13 @@ class AutoMapper extends BaseMapper
             $failedTypes[] = Helper\Type::toString($type);
         }
 
-        throw MapperException::newMissingMapsException(Helper\Type::toString($value), ...$failedTypes);
+        throw MapperException::newMissingMapsException(Helper\Type::toString($value), $failedTypes, $ctx);
     }
 
     /**
      * @return array{mixed, bool}
      */
-    private function handleMapping(Type $destPropertyInfoType, mixed $value): array
+    private function handleMapping(Type $destPropertyInfoType, mixed $value, MappingContext $ctx): array
     {
         $srcType = Helper\Type::toString($value);
         if ((null === $value && $destPropertyInfoType->isNullable(
@@ -153,11 +195,11 @@ class AutoMapper extends BaseMapper
         $destType = $this->canonicalize($destType);
 
         if ($destPropertyInfoType->isCollection()) {
-            $collection = $this->newCollectionFor($destPropertyInfoType, $value);
+            $collection = $this->newCollectionFor($destPropertyInfoType, $value, $ctx);
 
             foreach (is_iterable($value) ? $value : [$value] as $itemKey => $itemValue) {
-                $targetValue = $this->handleValue($itemValue, $destPropertyInfoType->getCollectionValueTypes());
-                $targetKey = $this->handleValue($itemKey, $destPropertyInfoType->getCollectionKeyTypes());
+                $targetValue = $this->handleValue($itemValue, $destPropertyInfoType->getCollectionValueTypes(), $ctx);
+                $targetKey = $this->handleValue($itemKey, $destPropertyInfoType->getCollectionKeyTypes(), $ctx);
 
                 $collection[$targetKey] = $targetValue;
             }
@@ -183,7 +225,12 @@ class AutoMapper extends BaseMapper
         }
 
         if (is_object($value)) {
-            $targetValue = $this->map($value, $map->getDestinationType()); // @phpstan-ignore-line
+            $destClass = $map->getDestinationType();
+            if (!class_exists($destClass) && !interface_exists($destClass)) {
+                throw MapperException::newDestinationClassNotFoundException($destClass, $ctx);
+            }
+            /** @var class-string<object> $destClass */
+            $targetValue = $this->doMap($value, $destClass, $ctx); // keep context
 
             return [$targetValue, true];
         }
@@ -191,7 +238,7 @@ class AutoMapper extends BaseMapper
         return [null, false];
     }
 
-    private function memberDestinationValuePut(MemberInterface $member, object $dest, mixed $value): void
+    private function memberDestinationValuePut(MemberInterface $member, object $dest, mixed $value, MappingContext $ctx): void
     {
         if ($member->isIgnored()) {
             return;
@@ -205,7 +252,7 @@ class AutoMapper extends BaseMapper
         $failedTypes = [];
         foreach ($destPropertyInfoTypes as $destPropertyInfoType) {
             $failedTypes[] = Helper\Type::toString($destPropertyInfoType);
-            [$targetValue, $ok] = $this->handleMapping($destPropertyInfoType, $value);
+            [$targetValue, $ok] = $this->handleMapping($destPropertyInfoType, $value, $ctx);
 
             if (!$ok) {
                 $this->logger->info(sprintf('Type mapping failed for member "%s"', $member->getDestinationProperty()), [
@@ -221,13 +268,13 @@ class AutoMapper extends BaseMapper
             return;
         }
 
-        throw MapperException::newMissingMapsException(Helper\Type::toString($value), ...$failedTypes);
+        throw MapperException::newMissingMapsException(Helper\Type::toString($value), $failedTypes, $ctx);
     }
 
     /**
      * @return array{mixed, bool}
      */
-    private function memberSourceValueFor(MapInterface $map, MemberInterface $member, object $source): array
+    private function memberSourceValueFor(MapInterface $map, MemberInterface $member, object $source, MappingContext $ctx): array
     {
         $valueProvider = $member->getValueProvider();
         if (null !== $valueProvider) {
@@ -253,7 +300,7 @@ class AutoMapper extends BaseMapper
     /**
      * @return \ArrayAccess<mixed,mixed>|array<mixed>
      */
-    private function newCollectionFor(Type $destType, mixed $srcValue): \ArrayAccess|array
+    private function newCollectionFor(Type $destType, mixed $srcValue, MappingContext $ctx): \ArrayAccess|array
     {
         if (!$destType->isCollection()) {
             throw new \LogicException('Type is not a collection');
@@ -272,31 +319,31 @@ class AutoMapper extends BaseMapper
         $map = $this->getMap($this->maps, $srcTypeString, $destClassName);
 
         if (null !== $map) {
-            $collection = $this->newInstanceOf($map, $srcValue, $destClassName);
+            $collection = $this->newInstanceOf($map, $srcValue, $destClassName, $ctx);
             if (!$collection instanceof \ArrayAccess) {
-                throw MapperException::newCollectionNotWriteableException($destType->getClassName() ?? $destType->getBuiltinType());
+                throw MapperException::newCollectionNotWriteableException($destType->getClassName() ?? $destType->getBuiltinType(), $ctx);
             }
 
             return $collection;
         }
 
         if (interface_exists($destClassName)) {
-            throw MapperException::newInstantiationFailedException($destClassName, $srcTypeString);
+            throw MapperException::newInstantiationFailedException($destClassName, $srcTypeString, $ctx);
         }
 
         if (!class_exists($destClassName)) {
-            throw MapperException::newDestinationClassNotFoundException($destClassName);
+            throw MapperException::newDestinationClassNotFoundException($destClassName, $ctx);
         }
 
         $collection = new ($destClassName)();
         if (!$collection instanceof \ArrayAccess) {
-            throw MapperException::newCollectionNotWriteableException($destType->getClassName() ?? $destType->getBuiltinType());
+            throw MapperException::newCollectionNotWriteableException($destType->getClassName() ?? $destType->getBuiltinType(), $ctx);
         }
 
         return $collection;
     }
 
-    private function newInstanceOf(MapInterface $map, mixed $srcValue, string $destType): object
+    private function newInstanceOf(MapInterface $map, mixed $srcValue, string $destType, MappingContext $ctx): object
     {
         $this->logger->debug(sprintf('Creating new instance of "%s"', $destType), [
             'destinationType' => $destType,
@@ -312,6 +359,11 @@ class AutoMapper extends BaseMapper
         }
 
         return $this->createA($destType);
+    }
+
+    private function rethrowWithContext(MapperException $e, MappingContext $ctx): MapperException
+    {
+        return ContextAwareMapperException::fromMapperException($e, $ctx);
     }
 
     private function newResolutionContext(

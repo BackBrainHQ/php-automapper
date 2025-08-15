@@ -38,13 +38,18 @@ library are applicable or have been implemented at this stage.
 
 For a detailed documentation, please refer to the [PHP AutoMapper Documentation](https://backbrainhq.github.io/php-automapper) site.
 
-For general usage patterns and understanding AutoMapper concepts, please refer to the original AutoMapper
-documentation:
+Quick links:
+- Getting Started: https://backbrainhq.github.io/php-automapper/docs/getting-started-guide
+- AutoMapper API: https://backbrainhq.github.io/php-automapper/docs/api-reference
+- Error handling: https://backbrainhq.github.io/php-automapper/docs/error-handling
+- Features: https://backbrainhq.github.io/php-automapper/docs/category/features
+- Extensibility: https://backbrainhq.github.io/php-automapper/docs/category/extensibility
+
+For general usage patterns and understanding AutoMapper concepts, please refer to the original AutoMapper documentation:
 
 [.NET AutoMapper Documentation](https://docs.automapper.org/en/latest/)
 
-The concepts and configurations explained in the original documentation serve as a basis for understanding
-how to use PHP AutoMapper effectively. Where PHP AutoMapper diverges or extends the original library's functionality, specific documentation and examples will be provided within this project's wiki or documentation directory.
+The concepts and configurations explained in the original documentation serve as a basis for understanding how to use PHP AutoMapper effectively. Where PHP AutoMapper diverges or extends the original library's functionality, specific documentation and examples will be provided within this project's wiki or documentation directory.
 
 
 ## Usage Example 
@@ -149,6 +154,16 @@ The `<type>` must be one of the following:
 - `test`: Adding missing or correcting existing tests
 - `chore`: Changes to the build process or auxiliary tools and libraries such as documentation generation
 
+## Development and testing
+
+- Install dependencies: `composer install`
+- Run unit tests: `vendor/bin/phpunit -c phpunit.xml.dist`
+- Coverage (Xdebug or PCOV): `XDEBUG_MODE=coverage vendor/bin/phpunit -c phpunit.xml.dist --coverage-text`
+- Static analysis (PHPStan): `vendor/bin/phpstan analyse`
+- Style (PHP-CS-Fixer): check `php vendor/bin/php-cs-fixer fix --dry-run --diff`, fix `php vendor/bin/php-cs-fixer fix --diff`
+- Full matrix (low/high deps, phpstan + phpunit with coverage): `make test`
+- Lint helpers: `make lint-fix` (auto-fix), then `make lint`
+
 ## License
 
 PHP AutoMapper is open-sourced software licensed under the [MIT license](LICENSE).
@@ -157,3 +172,4 @@ PHP AutoMapper is open-sourced software licensed under the [MIT license](LICENSE
 
 This project is not affiliated with the original AutoMapper project but is inspired by its functionality 
 and aims to bring similar capabilities to the PHP community.
+

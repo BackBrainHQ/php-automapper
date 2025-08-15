@@ -54,7 +54,7 @@ dump($profile);
 
 ```
   </TabItem>
-  <TabItem value="account_dto" label="AccountDTO.php" default>
+  <TabItem value="account_dto" label="AccountDTO.php">
 ```php
 class AccountDTO {
     public string $givenName;
@@ -90,3 +90,9 @@ class ProfileDTO {
 ```
   </TabItem>
 </Tabs>
+
+## Next steps
+
+- Learn the full API, including mapIterable() for collections and mutate() for in-place updates: see the [AutoMapper API](./api-reference).
+- Troubleshoot and understand exceptions: see [Error handling](./error-handling).
+- Explore more topics under [Features](./category/features) and [Extensibility](./category/extensibility).

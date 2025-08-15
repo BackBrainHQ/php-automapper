@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Backbrain\Automapper\Exceptions;
 
+use Backbrain\Automapper\Context\MappingContext;
+
 class MapperException extends \LogicException
 {
     /**
@@ -41,50 +43,80 @@ class MapperException extends \LogicException
      */
     public const INSTANTIATION_FAILED = 1006;
 
-    public static function newMissingMapException(string $sourceType, string $destinationType): self
+    private static function withContext(string $message, ?MappingContext $context): string
     {
-        return new self(sprintf('No mapping found for source type "%s" and destination type "%s"', $sourceType, $destinationType), self::MISSING_MAP);
-    }
-
-    public static function newMissingMapsException(string $srcType, string ...$destTypes): self
-    {
-        if (count($destTypes) > 1) {
-            return new self(sprintf('No mapping found for source type "%s" to any of the destination types "%s"', $srcType, implode('", "', $destTypes)), self::MISSING_MAP);
+        if (null === $context) {
+            return $message;
         }
 
-        return new self(sprintf('No mapping found for source type "%s" to destination type "%s"', $srcType, implode('", "', $destTypes)), self::MISSING_MAP);
+        return sprintf('%s Context: %s', $message, (string) $context);
     }
 
-    public static function newDestinationClassNotFoundException(string $destinationType): self
+    public static function newMissingMapException(string $sourceType, string $destinationType, ?MappingContext $context = null): self
     {
-        return new self(sprintf('Class for destination type "%s" does not exist', $destinationType), self::CLASS_NOT_FOUND);
+        $msg = self::withContext(sprintf('No mapping found for source type "%s" and destination type "%s"', $sourceType, $destinationType), $context);
+
+        return new self($msg, self::MISSING_MAP);
     }
 
-    public static function newUnexpectedTypeException(string $expectedType, mixed $actualValue): self
+    /**
+     * @param list<string> $destTypes
+     */
+    public static function newMissingMapsException(string $srcType, array $destTypes, ?MappingContext $context = null): self
     {
-        return new self(sprintf('Type conversion or instantiation failed due to unexpected type of value. Expected "%s", got "%s"', $expectedType, get_debug_type($actualValue)), self::UNEXPECTED_TYPE);
+        if (count($destTypes) > 1) {
+            $msg = sprintf('No mapping found for source type "%s" to any of the destination types "%s"', $srcType, implode('", "', $destTypes));
+
+            return new self(self::withContext($msg, $context), self::MISSING_MAP);
+        }
+
+        $msg = sprintf('No mapping found for source type "%s" to destination type "%s"', $srcType, implode('", "', $destTypes));
+
+        return new self(self::withContext($msg, $context), self::MISSING_MAP);
     }
 
-    public static function newCollectionNotWriteableException(string $className): self
+    public static function newDestinationClassNotFoundException(string $destinationType, ?MappingContext $context = null): self
     {
-        return new self(sprintf('Collection of type "%s" is not writeable since it does not implement ArrayAccess', $className), self::COLLECTION_NOT_WRITEABLE);
+        $msg = self::withContext(sprintf('Class for destination type "%s" does not exist', $destinationType), $context);
+
+        return new self($msg, self::CLASS_NOT_FOUND);
+    }
+
+    public static function newUnexpectedTypeException(string $expectedType, mixed $actualValue, ?MappingContext $context = null): self
+    {
+        $msg = self::withContext(sprintf('Type conversion or instantiation failed due to unexpected type of value. Expected "%s", got "%s"', $expectedType, get_debug_type($actualValue)), $context);
+
+        return new self($msg, self::UNEXPECTED_TYPE);
+    }
+
+    public static function newCollectionNotWriteableException(string $className, ?MappingContext $context = null): self
+    {
+        $msg = self::withContext(sprintf('Collection of type "%s" is not writeable since it does not implement ArrayAccess', $className), $context);
+
+        return new self($msg, self::COLLECTION_NOT_WRITEABLE);
     }
 
     /**
      * @param string[] $stack
      */
-    public static function newCircularDependencyException(array $stack, string $sourceType, string $mappedBy): self
+    public static function newCircularDependencyException(array $stack, string $sourceType, string $mappedBy, ?MappingContext $context = null): self
     {
-        return new self(sprintf('Circular dependency detected in mapping stack: "%s". Source type "%s" mapped by: "%s"', implode(' -> ', $stack), $sourceType, $mappedBy), self::CIRCULAR_DEPENDENCY);
+        $msg = self::withContext(sprintf('Circular dependency detected in mapping stack: "%s". Source type "%s" mapped by: "%s"', implode(' -> ', $stack), $sourceType, $mappedBy), $context);
+
+        return new self($msg, self::CIRCULAR_DEPENDENCY);
     }
 
-    public static function newIllegalTypeException(string $type): self
+    public static function newIllegalTypeException(string $type, ?MappingContext $context = null): self
     {
-        return new self(sprintf('Illegal type expression "%s"', $type), self::ILLEGAL_TYPE_EXPRESSION);
+        $msg = self::withContext(sprintf('Illegal type expression "%s"', $type), $context);
+
+        return new self($msg, self::ILLEGAL_TYPE_EXPRESSION);
     }
 
-    public static function newInstantiationFailedException(string $type, string $sourceType = 'unknown'): self
+    public static function newInstantiationFailedException(string $type, string $sourceType = 'unknown', ?MappingContext $context = null): self
     {
-        return new self(sprintf('Instantiation of type "%s" failed. Consider creating a map (for source type "%s") and/or use a TypeFactory (see constructUsing())', $type, $sourceType), self::INSTANTIATION_FAILED);
+        $msg = self::withContext(sprintf('Instantiation of type "%s" failed. Consider creating a map (for source type "%s") and/or use a TypeFactory (see constructUsing())', $type, $sourceType), $context);
+
+        return new self($msg, self::INSTANTIATION_FAILED);
     }
 }
