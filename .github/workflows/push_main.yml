@@ -75,7 +75,7 @@ jobs:
         run: npm run build
         working-directory: docs/site
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs/site/build
       - name: Deploy to GitHub Pages
