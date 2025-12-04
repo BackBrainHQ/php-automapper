@@ -12,6 +12,7 @@ use Symfony\Component\Uid\UuidV3;
 use Symfony\Component\Uid\UuidV4;
 use Symfony\Component\Uid\UuidV5;
 use Symfony\Component\Uid\UuidV6;
+use Symfony\Component\Uid\UuidV7;
 
 class UidToRfc4122Profile extends Profile
 {
@@ -19,6 +20,8 @@ class UidToRfc4122Profile extends Profile
     {
         $this
             // create default map for UUIDs
+            ->createMap(UuidV7::class, 'string')
+                ->convertUsing(fn (UuidV7 $source): string => $source->toRfc4122())
             ->createMap(Uuid::class, 'string')
                 ->convertUsing(fn (UuidV6 $source): string => $source->toRfc4122())
             ->createMap(UuidV6::class, 'string')

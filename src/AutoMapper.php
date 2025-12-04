@@ -10,7 +10,9 @@ use Backbrain\Automapper\Contract\MemberInterface;
 use Backbrain\Automapper\Contract\ResolutionContextInterface;
 use Backbrain\Automapper\Exceptions\ContextAwareMapperException;
 use Backbrain\Automapper\Exceptions\MapperException;
-use Symfony\Component\PropertyInfo\Type;
+use Backbrain\Automapper\Helper\TypeTransformer;
+use Symfony\Component\TypeInfo\Type;
+use Symfony\Component\TypeInfo\Type\UnionType;
 
 class AutoMapper extends BaseMapper
 {
@@ -62,7 +64,10 @@ class AutoMapper extends BaseMapper
     {
         $ctx = MappingContext::root($source, $destinationType);
         try {
-            foreach ($this->parseTypeExpr($destinationType) as $dType) {
+            $type = $this->parseTypeExpr($destinationType);
+            $types = $type instanceof UnionType ? $type->getTypes() : [$type];
+
+            foreach ($types as $dType) {
                 $destTypeStr = Helper\Type::toString($dType);
                 $ctxLoop = $ctx->withDestTypes([$destTypeStr]);
                 [$value, $ok] = $this->handleMapping($dType, $source, $ctxLoop);
@@ -177,15 +182,27 @@ class AutoMapper extends BaseMapper
      */
     private function handleMapping(Type $destPropertyInfoType, mixed $value, MappingContext $ctx): array
     {
+        // Handle UnionType by trying to map to each type in the union
+        if ($destPropertyInfoType instanceof UnionType) {
+            foreach ($destPropertyInfoType->getTypes() as $type) {
+                [$targetValue, $ok] = $this->handleMapping($type, $value, $ctx);
+                if ($ok) {
+                    return [$targetValue, true];
+                }
+            }
+
+            return [null, false];
+        }
+
         $srcType = Helper\Type::toString($value);
-        if ((null === $value && $destPropertyInfoType->isNullable(
-        )) || 'mixed' === $destPropertyInfoType->getBuiltinType()) {
+
+        if ((null === $value && Helper\Type::isNullable($destPropertyInfoType)) || 'mixed' === Helper\Type::getBuiltinType($destPropertyInfoType)) {
             return [$value, true];
         }
 
-        $destType = $destPropertyInfoType->getBuiltinType();
-        if ('object' === $destPropertyInfoType->getBuiltinType()) {
-            $destType = $destPropertyInfoType->getClassName();
+        $destType = Helper\Type::getBuiltinType($destPropertyInfoType);
+        if ('object' === Helper\Type::getBuiltinType($destPropertyInfoType)) {
+            $destType = Helper\Type::getClassName($destPropertyInfoType);
             if (null === $destType) {
                 throw new \LogicException('Cannot reflect class name for object');
             }
@@ -194,13 +211,16 @@ class AutoMapper extends BaseMapper
         $srcType = $this->canonicalize($srcType);
         $destType = $this->canonicalize($destType);
 
-        if ($destPropertyInfoType->isCollection()) {
+        if (Helper\Type::isCollection($destPropertyInfoType)) {
             $collection = $this->newCollectionFor($destPropertyInfoType, $value, $ctx);
 
             foreach (is_iterable($value) ? $value : [$value] as $itemKey => $itemValue) {
-                $targetValue = $this->handleValue($itemValue, $destPropertyInfoType->getCollectionValueTypes(), $ctx);
-                $targetKey = $this->handleValue($itemKey, $destPropertyInfoType->getCollectionKeyTypes(), $ctx);
+                // @phpstan-ignore-next-line
+                $targetValue = $this->handleValue($itemValue, Helper\Type::getCollectionValueTypes($destPropertyInfoType), $ctx);
+                // @phpstan-ignore-next-line
+                $targetKey = $this->handleValue($itemKey, Helper\Type::getCollectionKeyTypes($destPropertyInfoType), $ctx);
 
+                // @phpstan-ignore-next-line
                 $collection[$targetKey] = $targetValue;
             }
 
@@ -244,20 +264,32 @@ class AutoMapper extends BaseMapper
             return;
         }
 
-        $destPropertyInfoTypes = $this->propertyInfoExtractor->getTypes(
-            get_class($dest),
-            $member->getDestinationProperty()
-        ) ?? [];
+        // @phpstan-ignore-next-line
+        if (method_exists($this->propertyInfoExtractor, 'getType')) {
+            $type = $this->propertyInfoExtractor->getType(get_class($dest), $member->getDestinationProperty());
+        } else {
+            // @phpstan-ignore-next-line
+            $types = $this->propertyInfoExtractor->getTypes(get_class($dest), $member->getDestinationProperty());
+            $type = $types ? TypeTransformer::toTypeInfoType($types) : null;
+        }
+
+        if (null === $type) {
+            $failedTypes = [];
+            throw MapperException::newMissingMapsException(Helper\Type::toString($value), $failedTypes, $ctx);
+        }
+
+        $types = $type instanceof UnionType ? $type->getTypes() : [$type];
 
         $failedTypes = [];
-        foreach ($destPropertyInfoTypes as $destPropertyInfoType) {
+        /** @var Type $destPropertyInfoType */
+        foreach ($types as $destPropertyInfoType) {
             $failedTypes[] = Helper\Type::toString($destPropertyInfoType);
             [$targetValue, $ok] = $this->handleMapping($destPropertyInfoType, $value, $ctx);
 
             if (!$ok) {
                 $this->logger->info(sprintf('Type mapping failed for member "%s"', $member->getDestinationProperty()), [
                     'sourceType' => Helper\Type::toString($value),
-                    'destinationType' => $destPropertyInfoType->getBuiltinType(),
+                    'destinationType' => Helper\Type::getBuiltinType($destPropertyInfoType),
                 ]);
 
                 continue;
@@ -302,15 +334,15 @@ class AutoMapper extends BaseMapper
      */
     private function newCollectionFor(Type $destType, mixed $srcValue, MappingContext $ctx): \ArrayAccess|array
     {
-        if (!$destType->isCollection()) {
+        if (!Helper\Type::isCollection($destType)) {
             throw new \LogicException('Type is not a collection');
         }
 
-        if (Type::BUILTIN_TYPE_ARRAY == $destType->getBuiltinType()) {
+        if (Helper\Type::ARRAY == Helper\Type::getBuiltinType($destType)) {
             return [];
         }
 
-        $destClassName = $destType->getClassName();
+        $destClassName = Helper\Type::getClassName($destType);
         if (null === $destClassName) {
             return [];
         }
@@ -321,7 +353,7 @@ class AutoMapper extends BaseMapper
         if (null !== $map) {
             $collection = $this->newInstanceOf($map, $srcValue, $destClassName, $ctx);
             if (!$collection instanceof \ArrayAccess) {
-                throw MapperException::newCollectionNotWriteableException($destType->getClassName() ?? $destType->getBuiltinType(), $ctx);
+                throw MapperException::newCollectionNotWriteableException(Helper\Type::getClassName($destType) ?? Helper\Type::getBuiltinType($destType), $ctx);
             }
 
             return $collection;
@@ -337,7 +369,7 @@ class AutoMapper extends BaseMapper
 
         $collection = new ($destClassName)();
         if (!$collection instanceof \ArrayAccess) {
-            throw MapperException::newCollectionNotWriteableException($destType->getClassName() ?? $destType->getBuiltinType(), $ctx);
+            throw MapperException::newCollectionNotWriteableException(Helper\Type::getClassName($destType) ?? Helper\Type::getBuiltinType($destType), $ctx);
         }
 
         return $collection;

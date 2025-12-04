@@ -9,7 +9,6 @@ _info:
 build: _info vendors
 	npm run build
 
-
 .PHONY: run
 run: _info vendors
 	npm run start

@@ -23,11 +23,10 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
-use Symfony\Component\PropertyInfo\PhpStan\NameScope;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractorInterface;
-use Symfony\Component\PropertyInfo\Type;
-use Symfony\Component\PropertyInfo\Util\PhpStanTypeHelper;
+use Symfony\Component\TypeInfo\Type;
 use Symfony\Component\TypeInfo\TypeContext\TypeContext;
+use Symfony\Component\TypeInfo\TypeResolver\StringTypeResolver;
 
 abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
 {
@@ -270,10 +269,7 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
         return true;
     }
 
-    /**
-     * @return Type[]
-     */
-    protected function parseTypeExpr(string $type): array
+    protected function parseTypeExpr(string $type): Type
     {
         // ensure that the type is a valid PHPStan type expression
         // it should only contain [a-zA-Z0-9_|\\<>]+
@@ -282,24 +278,13 @@ abstract class BaseMapper implements AutoMapperInterface, LoggerAwareInterface
             throw MapperException::newIllegalTypeException($type);
         }
 
-        [$phpDocParser, $tokens] = Helper\PhpDocParserFactory::create($type);
+        try {
+            $resolver = new StringTypeResolver();
 
-        $phpDocNode = $phpDocParser->parse($tokens); // PhpDocNode
-        $paramTags = $phpDocNode->getReturnTagValues();
-
-        if (!isset($paramTags[0])) {
+            return $resolver->resolve($type, new TypeContext(\stdClass::class, \stdClass::class));
+        } catch (\Throwable $e) {
             throw MapperException::newIllegalTypeException($type);
         }
-
-        // This is a workaround for the missing public API in Symfony's PropertyInfo component
-        // Mind future changes in Symfony's PropertyInfo component
-        if (class_exists(NameScope::class)) {
-            // @phpstan-ignore-next-line
-            return (new PhpStanTypeHelper())->getTypes($paramTags[0], new NameScope(\stdClass::class, '', []));
-        }
-
-        // @phpstan-ignore-next-line
-        return (new PhpStanTypeHelper())->getTypes($paramTags[0], new TypeContext(\stdClass::class, \stdClass::class));
     }
 
     protected function canonicalize(string $type): string
