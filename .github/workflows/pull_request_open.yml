@@ -19,11 +19,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
       - name: Install Dependencies
         run: make vendors
       - name: Lint
@@ -36,17 +36,17 @@ jobs:
       fail-fast: false
       matrix:
         setup:
-          - php: '8.2'
+          - php: '8.4'
             vendors: 'high-deps'
-          - php: '8.2'
+          - php: '8.4'
             vendors: 'low-deps'
-          - php: '8.3'
+          - php: '8.5'
             vendors: 'high-deps'
-          - php: '8.3'
+          - php: '8.5'
             vendors: 'low-deps'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -63,21 +63,17 @@ jobs:
       fail-fast: false
       matrix:
         setup:
-          - php: '8.2'
-            vendors: 'high-deps'
-          - php: '8.2'
-            vendors: 'low-deps'
-          - php: '8.3'
-            vendors: 'high-deps'
-          - php: '8.3'
-            vendors: 'low-deps'
           - php: '8.4'
             vendors: 'high-deps'
           - php: '8.4'
+            vendors: 'low-deps'
+          - php: '8.5'
+            vendors: 'high-deps'
+          - php: '8.5'
             vendors: 'low-deps'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -90,10 +86,10 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm

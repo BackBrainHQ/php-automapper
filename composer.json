@@ -26,19 +26,20 @@
   "authors": [
     {
       "name": "Maximilian Reichel",
-      "email": "automapper@backbrain.io"
+      "email": "hello@backbrain.io"
     }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.4",
     "psr/log": "^3.0",
     "psr/cache": "^3.0",
-    "symfony/property-access": "^6.0|^7.0",
-    "symfony/property-info": "^6.0|^7.0",
-    "symfony/finder": "^6.0|^7.0",
-    "symfony/expression-language": "^6.0|^7.0",
-    "symfony/uid": "^6.0|^7.0",
-    "symfony/clock": "^6.0|^7.0",
+    "symfony/property-access": "^7.0|^8.0",
+    "symfony/property-info": "^7.0|^8.0",
+    "symfony/finder": "^7.0|^8.0",
+    "symfony/expression-language": "^7.0|^8.0",
+    "symfony/uid": "^7.0|^8.0",
+    "symfony/clock": "^7.0|^8.0",
+    "symfony/type-info": "^7.0|^8.0",
     "phpstan/phpdoc-parser": "^1.26|^2.0",
     "phpdocumentor/type-resolver": "^1.8",
     "phpdocumentor/reflection-docblock": "^5.3",
@@ -52,9 +53,9 @@
     "friendsofphp/php-cs-fixer": "^3.73",
     "symfony/var-dumper": "*",
     "doctrine/collections": "^2.2",
-    "symfony/framework-bundle": "^6.0|^7.0",
-    "symfony/filesystem": "^6.0|^7.0",
-    "symfony/dependency-injection": "^6.0|^7.0",
-    "symfony/http-kernel": "^6.0|^7.0"
+    "symfony/framework-bundle": "^7.0|^8.0",
+    "symfony/filesystem": "^7.0|^8.0",
+    "symfony/dependency-injection": "^7.0|^8.0",
+    "symfony/http-kernel": "^7.0|^8.0"
   }
 }

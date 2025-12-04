@@ -11,7 +11,7 @@ use Backbrain\Automapper\Contract\MapInterface;
  *
  * It is immutable; mutation methods return a new instance with updated state.
  */
-final class MappingContext
+final class MappingContext implements \Stringable
 {
     /**
      * @param list<string> $pathSegments

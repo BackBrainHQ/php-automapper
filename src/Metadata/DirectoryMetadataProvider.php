@@ -37,6 +37,7 @@ class DirectoryMetadataProvider implements DirectoryMetadataProviderInterface
             $parser = $parserFactory->create(ParserFactory::PREFER_PHP7);
         }
 
+        /** @var \PhpParser\Parser $parser */
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
 
@@ -78,7 +79,7 @@ class DirectoryMetadataProvider implements DirectoryMetadataProviderInterface
             };
 
             $traverser->addVisitor($classNameVisitor);
-
+            // @phpstan-ignore-next-line
             $traverser->traverse($ast);
 
             foreach ($classNameVisitor->getClassNames() as $className) {

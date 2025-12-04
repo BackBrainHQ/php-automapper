@@ -1,8 +1,9 @@
 parameters:
-    level: 9
+    level: 10
     paths:
         - src
     excludePaths:
         - src/Helper/PhpDocParserFactory.php
+        - src/Bundle/DependencyInjection/AutomapperExtension.php
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
