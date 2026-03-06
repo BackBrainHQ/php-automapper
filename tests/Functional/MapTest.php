@@ -19,6 +19,7 @@ use Backbrain\Automapper\Tests\Fixtures\ScalarDestSnakeCase;
 use Backbrain\Automapper\Tests\Fixtures\ScalarDestWithAnotherString;
 use Backbrain\Automapper\Tests\Fixtures\ScalarSrc;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class MapTest extends TestCase
 {
@@ -175,5 +176,51 @@ class MapTest extends TestCase
         $destination = $autoMapper->map($source, ObjectDestSameType::class);
 
         $this->assertSame($source->getObj(), $destination->getObj());
+    }
+
+    public function testIgnoredMemberWithNoSourcePropertyDoesNotLogWarning()
+    {
+        $warningMembers = [];
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->method('warning')->willReturnCallback(
+            function (string $message, array $context) use (&$warningMembers) {
+                if ('Cannot access source property.' === $message) {
+                    $warningMembers[] = $context['member'] ?? null;
+                }
+            }
+        );
+
+        $config = new MapperConfiguration(fn (Config $config) => $config
+            ->createMap(ScalarSrc::class, ScalarDestWithAnotherString::class)
+            ->forMember('anotherString', fn (Options $opts) => $opts->ignore())
+        );
+
+        $autoMapper = new AutoMapper($config, logger: $logger);
+
+        $source = new ScalarSrc('John Doe', 30, 1.75);
+        $destination = $autoMapper->map($source, ScalarDestWithAnotherString::class);
+
+        $this->assertInstanceOf(ScalarDestWithAnotherString::class, $destination);
+        $this->assertNotContains('anotherString', $warningMembers, 'Ignored member "anotherString" should not trigger a source property warning');
+        $this->assertEquals($source->aString, $destination->aString);
+        $this->assertEquals($source->anInt, $destination->anInt);
+    }
+
+    public function testIgnoredMemberSkipsSourceReadAndDestinationWrite()
+    {
+        $config = new MapperConfiguration(fn (Config $config) => $config
+            ->createMap(ScalarSrc::class, ScalarDest::class)
+            ->forMember('aString', fn (Options $opts) => $opts->ignore())
+        );
+
+        $autoMapper = $config->createMapper();
+
+        $source = new ScalarSrc('John Doe', 30, 1.75);
+        $destination = $autoMapper->map($source, ScalarDest::class);
+
+        $this->assertInstanceOf(ScalarDest::class, $destination);
+        $this->assertEquals('', $destination->aString);
+        $this->assertEquals($source->anInt, $destination->anInt);
+        $this->assertEquals($source->aFloat, $destination->aFloat);
     }
 }
