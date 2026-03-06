@@ -119,6 +119,10 @@ class AutoMapper extends BaseMapper
         }
 
         foreach ($this->membersFor($map) as $member) {
+            if ($member->isIgnored()) {
+                continue;
+            }
+
             [$sourcePropertyValue, $ok] = $this->memberSourceValueFor($map, $member, $srcValue, $ctx);
             if (!$ok) {
                 $this->logger->warning('Cannot access source property.', [
@@ -260,10 +264,6 @@ class AutoMapper extends BaseMapper
 
     private function memberDestinationValuePut(MemberInterface $member, object $dest, mixed $value, MappingContext $ctx): void
     {
-        if ($member->isIgnored()) {
-            return;
-        }
-
         // @phpstan-ignore-next-line
         if (method_exists($this->propertyInfoExtractor, 'getType')) {
             $type = $this->propertyInfoExtractor->getType(get_class($dest), $member->getDestinationProperty());
