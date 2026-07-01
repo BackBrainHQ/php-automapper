@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -46,7 +46,7 @@ jobs:
             vendors: 'low-deps'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -73,7 +73,7 @@ jobs:
             vendors: 'low-deps'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -86,7 +86,7 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v6
